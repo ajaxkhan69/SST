@@ -1,0 +1,1317 @@
+ARM GAS  /tmp/ccOfvrys.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 6
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"sst.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.global	SST_currPrio_
+  18              		.section	.bss.SST_currPrio_,"aw",%nobits
+  19              		.align	3
+  22              	SST_currPrio_:
+  23 0000 00000000 		.space	8
+  23      00000000 
+  24              		.global	SST_readySet_
+  25              		.section	.bss.SST_readySet_,"aw",%nobits
+  26              		.align	3
+  29              	SST_readySet_:
+  30 0000 00000000 		.space	8
+  30      00000000 
+  31              		.section	.bss.l_taskCB,"aw",%nobits
+  32              		.align	3
+  35              	l_taskCB:
+  36 0000 00000000 		.space	4096
+  36      00000000 
+  36      00000000 
+  36      00000000 
+  36      00000000 
+  37              		.section	.text.SST_task,"ax",%progbits
+  38              		.align	1
+  39              		.global	SST_task
+  40              		.syntax unified
+  41              		.thumb
+  42              		.thumb_func
+  43              		.fpu fpv4-sp-d16
+  45              	SST_task:
+  46              	.LFB126:
+  47              		.file 1 "Src/sst.c"
+   1:Src/sst.c     **** /*****************************************************************************
+   2:Src/sst.c     **** * SST platform-independent implementation
+   3:Src/sst.c     **** *
+   4:Src/sst.c     **** * Copyright (C) 2006 Miro Samek and Robert Ward. All rights reserved.
+   5:Src/sst.c     **** *
+   6:Src/sst.c     **** * This software may be distributed and modified under the terms of the GNU
+   7:Src/sst.c     **** * General Public License version 2 (GPL) as published by the Free Software
+   8:Src/sst.c     **** * Foundation and appearing in the file GPL.TXT included in the packaging of
+   9:Src/sst.c     **** * this file. Please note that GPL Section 2[b] requires that all works based
+  10:Src/sst.c     **** * on this software must also be made publicly available under the terms of
+  11:Src/sst.c     **** * the GPL ("Copyleft").
+ARM GAS  /tmp/ccOfvrys.s 			page 2
+
+
+  12:Src/sst.c     **** *
+  13:Src/sst.c     **** * Contact information:
+  14:Src/sst.c     **** * Email:    miro@quantum-leaps.com
+  15:Src/sst.c     **** * Internet: www.quantum-leaps.com
+  16:Src/sst.c     **** *****************************************************************************/
+  17:Src/sst.c     **** #include "sst_port.h"
+  18:Src/sst.c     **** #include "math.h"
+  19:Src/sst.c     **** 
+  20:Src/sst.c     **** #include "usart.h"
+  21:Src/sst.c     **** /* Public-scope objects ----------------------------------------------------*/
+  22:Src/sst.c     **** //uintX_t SST_currPrio_ = (uintX_t)0xFF;              /* current SST priority */
+  23:Src/sst.c     **** uintX_t SST_currPrio_ = (uintX_t)0;              /* current SST priority */
+  24:Src/sst.c     **** uintX_t SST_readySet_ = (uintX_t)0;                        /* SST ready-set */
+  25:Src/sst.c     **** 
+  26:Src/sst.c     **** typedef struct TaskCBTag TaskCB;
+  27:Src/sst.c     **** struct TaskCBTag {
+  28:Src/sst.c     ****     SSTTask   task__;
+  29:Src/sst.c     ****     SSTEvent  *queue__;
+  30:Src/sst.c     ****     uintX_t   end__;
+  31:Src/sst.c     ****     uintX_t   head__;
+  32:Src/sst.c     ****     uintX_t   tail__;
+  33:Src/sst.c     ****     uintX_t   nUsed__;
+  34:Src/sst.c     ****     uintX_t   mask__;
+  35:Src/sst.c     ****     Semaphore *s__;
+  36:Src/sst.c     ****     MailBox   *mb__;
+  37:Src/sst.c     ****     Queue     *q__;
+  38:Src/sst.c     **** };
+  39:Src/sst.c     **** 
+  40:Src/sst.c     **** /* Local-scope objects -----------------------------------------------------*/
+  41:Src/sst.c     **** static TaskCB l_taskCB[SST_MAX_PRIO];
+  42:Src/sst.c     **** //SST_currPrio_ = (uintX_t) 0;
+  43:Src/sst.c     **** /*..........................................................................*/
+  44:Src/sst.c     **** void SST_task(SSTTask task, uintX_t prio, SSTEvent *queue, uintX_t qlen,
+  45:Src/sst.c     ****               SSTSignal sig, SSTParam par, Semaphore *s, MailBox *mb, Queue *q)
+  46:Src/sst.c     **** {
+  48              		.loc 1 46 0
+  49              		.cfi_startproc
+  50              		@ args = 44, pretend = 0, frame = 40
+  51              		@ frame_needed = 1, uses_anonymous_args = 0
+  52 0000 90B5     		push	{r4, r7, lr}
+  53              	.LCFI0:
+  54              		.cfi_def_cfa_offset 12
+  55              		.cfi_offset 4, -12
+  56              		.cfi_offset 7, -8
+  57              		.cfi_offset 14, -4
+  58 0002 8FB0     		sub	sp, sp, #60
+  59              	.LCFI1:
+  60              		.cfi_def_cfa_offset 72
+  61 0004 04AF     		add	r7, sp, #16
+  62              	.LCFI2:
+  63              		.cfi_def_cfa 7, 56
+  64 0006 F860     		str	r0, [r7, #12]
+  65 0008 C7E90023 		strd	r2, [r7]
+  47:Src/sst.c     ****     SSTEvent ie;                                    /* initialization event */
+  48:Src/sst.c     ****     TaskCB *tcb  = &l_taskCB[prio - 1];
+  66              		.loc 1 48 0
+  67 000c D7E90034 		ldrd	r3, [r7]
+ARM GAS  /tmp/ccOfvrys.s 			page 3
+
+
+  68 0010 13F1FF33 		adds	r3, r3, #-1
+  69 0014 44F1FF34 		adc	r4, r4, #-1
+  70 0018 9B01     		lsls	r3, r3, #6
+  71 001a 284A     		ldr	r2, .L2
+  72 001c 1344     		add	r3, r3, r2
+  73 001e 7B62     		str	r3, [r7, #36]
+  49:Src/sst.c     ****     tcb->task__  = task;
+  74              		.loc 1 49 0
+  75 0020 7B6A     		ldr	r3, [r7, #36]
+  76 0022 FA68     		ldr	r2, [r7, #12]
+  77 0024 1A60     		str	r2, [r3]
+  50:Src/sst.c     ****     tcb->queue__ = queue;
+  78              		.loc 1 50 0
+  79 0026 7B6A     		ldr	r3, [r7, #36]
+  80 0028 BA6B     		ldr	r2, [r7, #56]
+  81 002a 5A60     		str	r2, [r3, #4]
+  51:Src/sst.c     ****     tcb->end__   = qlen;
+  82              		.loc 1 51 0
+  83 002c 7A6A     		ldr	r2, [r7, #36]
+  84 002e D7E91034 		ldrd	r3, [r7, #64]
+  85 0032 C2E90234 		strd	r3, [r2, #8]
+  52:Src/sst.c     ****     tcb->head__  = (uintX_t)0;
+  86              		.loc 1 52 0
+  87 0036 7A6A     		ldr	r2, [r7, #36]
+  88 0038 4FF00003 		mov	r3, #0
+  89 003c 4FF00004 		mov	r4, #0
+  90 0040 C2E90434 		strd	r3, [r2, #16]
+  53:Src/sst.c     ****     tcb->tail__  = (uintX_t)0;
+  91              		.loc 1 53 0
+  92 0044 7A6A     		ldr	r2, [r7, #36]
+  93 0046 4FF00003 		mov	r3, #0
+  94 004a 4FF00004 		mov	r4, #0
+  95 004e C2E90634 		strd	r3, [r2, #24]
+  54:Src/sst.c     ****     tcb->nUsed__ = (uintX_t)0;
+  96              		.loc 1 54 0
+  97 0052 7A6A     		ldr	r2, [r7, #36]
+  98 0054 4FF00003 		mov	r3, #0
+  99 0058 4FF00004 		mov	r4, #0
+ 100 005c C2E90834 		strd	r3, [r2, #32]
+  55:Src/sst.c     ****     tcb->mask__  = (1 << (prio - 1));
+ 101              		.loc 1 55 0
+ 102 0060 3B68     		ldr	r3, [r7]
+ 103 0062 013B     		subs	r3, r3, #1
+ 104 0064 0122     		movs	r2, #1
+ 105 0066 02FA03F3 		lsl	r3, r2, r3
+ 106 006a 4FEAE374 		asr	r4, r3, #31
+ 107 006e 7A6A     		ldr	r2, [r7, #36]
+ 108 0070 C2E90A34 		strd	r3, [r2, #40]
+  56:Src/sst.c     ****     ie.sig = sig;
+ 109              		.loc 1 56 0
+ 110 0074 D7E91234 		ldrd	r3, [r7, #72]
+ 111 0078 C7E90434 		strd	r3, [r7, #16]
+  57:Src/sst.c     ****     ie.par = par;
+ 112              		.loc 1 57 0
+ 113 007c D7E91434 		ldrd	r3, [r7, #80]
+ 114 0080 C7E90634 		strd	r3, [r7, #24]
+  58:Src/sst.c     ****     tcb->s__ = s;
+ARM GAS  /tmp/ccOfvrys.s 			page 4
+
+
+ 115              		.loc 1 58 0
+ 116 0084 7B6A     		ldr	r3, [r7, #36]
+ 117 0086 BA6D     		ldr	r2, [r7, #88]
+ 118 0088 1A63     		str	r2, [r3, #48]
+  59:Src/sst.c     ****     tcb->mb__ = mb;
+ 119              		.loc 1 59 0
+ 120 008a 7B6A     		ldr	r3, [r7, #36]
+ 121 008c FA6D     		ldr	r2, [r7, #92]
+ 122 008e 5A63     		str	r2, [r3, #52]
+  60:Src/sst.c     ****     tcb->q__ = q;
+ 123              		.loc 1 60 0
+ 124 0090 7B6A     		ldr	r3, [r7, #36]
+ 125 0092 3A6E     		ldr	r2, [r7, #96]
+ 126 0094 9A63     		str	r2, [r3, #56]
+  61:Src/sst.c     ****     //tcb->task__(ie,s,mb,q);                                 /* initialize the task */
+  62:Src/sst.c     ****     tcb->task__(ie,tcb->s__,tcb->mb__,tcb->q__);
+ 127              		.loc 1 62 0
+ 128 0096 7B6A     		ldr	r3, [r7, #36]
+ 129 0098 1C68     		ldr	r4, [r3]
+ 130 009a 7B6A     		ldr	r3, [r7, #36]
+ 131 009c 1B6B     		ldr	r3, [r3, #48]
+ 132 009e 7A6A     		ldr	r2, [r7, #36]
+ 133 00a0 526B     		ldr	r2, [r2, #52]
+ 134 00a2 796A     		ldr	r1, [r7, #36]
+ 135 00a4 896B     		ldr	r1, [r1, #56]
+ 136 00a6 0291     		str	r1, [sp, #8]
+ 137 00a8 0192     		str	r2, [sp, #4]
+ 138 00aa 0093     		str	r3, [sp]
+ 139 00ac 07F11003 		add	r3, r7, #16
+ 140 00b0 0FCB     		ldm	r3, {r0, r1, r2, r3}
+ 141 00b2 A047     		blx	r4
+ 142              	.LVL0:
+  63:Src/sst.c     **** }
+ 143              		.loc 1 63 0
+ 144 00b4 00BF     		nop
+ 145 00b6 2C37     		adds	r7, r7, #44
+ 146              	.LCFI3:
+ 147              		.cfi_def_cfa_offset 12
+ 148 00b8 BD46     		mov	sp, r7
+ 149              	.LCFI4:
+ 150              		.cfi_def_cfa_register 13
+ 151              		@ sp needed
+ 152 00ba 90BD     		pop	{r4, r7, pc}
+ 153              	.L3:
+ 154              		.align	2
+ 155              	.L2:
+ 156 00bc 00000000 		.word	l_taskCB
+ 157              		.cfi_endproc
+ 158              	.LFE126:
+ 160              		.section	.text.SST_run,"ax",%progbits
+ 161              		.align	1
+ 162              		.global	SST_run
+ 163              		.syntax unified
+ 164              		.thumb
+ 165              		.thumb_func
+ 166              		.fpu fpv4-sp-d16
+ 168              	SST_run:
+ARM GAS  /tmp/ccOfvrys.s 			page 5
+
+
+ 169              	.LFB127:
+  64:Src/sst.c     **** /*..........................................................................*/
+  65:Src/sst.c     **** void SST_run(void) {
+ 170              		.loc 1 65 0
+ 171              		.cfi_startproc
+ 172              		@ args = 0, pretend = 0, frame = 0
+ 173              		@ frame_needed = 1, uses_anonymous_args = 0
+ 174 0000 98B5     		push	{r3, r4, r7, lr}
+ 175              	.LCFI5:
+ 176              		.cfi_def_cfa_offset 16
+ 177              		.cfi_offset 3, -16
+ 178              		.cfi_offset 4, -12
+ 179              		.cfi_offset 7, -8
+ 180              		.cfi_offset 14, -4
+ 181 0002 00AF     		add	r7, sp, #0
+ 182              	.LCFI6:
+ 183              		.cfi_def_cfa_register 7
+  66:Src/sst.c     ****     SST_start();                                              /* start ISRs */
+ 184              		.loc 1 66 0
+ 185 0004 FFF7FEFF 		bl	SST_start
+ 186              	.LBB20:
+ 187              	.LBB21:
+ 188              		.file 2 "Drivers/CMSIS/Include/cmsis_gcc.h"
+   1:Drivers/CMSIS/Include/cmsis_gcc.h **** /**************************************************************************//**
+   2:Drivers/CMSIS/Include/cmsis_gcc.h ****  * @file     cmsis_gcc.h
+   3:Drivers/CMSIS/Include/cmsis_gcc.h ****  * @brief    CMSIS Cortex-M Core Function/Instruction Header File
+   4:Drivers/CMSIS/Include/cmsis_gcc.h ****  * @version  V4.30
+   5:Drivers/CMSIS/Include/cmsis_gcc.h ****  * @date     20. October 2015
+   6:Drivers/CMSIS/Include/cmsis_gcc.h ****  ******************************************************************************/
+   7:Drivers/CMSIS/Include/cmsis_gcc.h **** /* Copyright (c) 2009 - 2015 ARM LIMITED
+   8:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+   9:Drivers/CMSIS/Include/cmsis_gcc.h ****    All rights reserved.
+  10:Drivers/CMSIS/Include/cmsis_gcc.h ****    Redistribution and use in source and binary forms, with or without
+  11:Drivers/CMSIS/Include/cmsis_gcc.h ****    modification, are permitted provided that the following conditions are met:
+  12:Drivers/CMSIS/Include/cmsis_gcc.h ****    - Redistributions of source code must retain the above copyright
+  13:Drivers/CMSIS/Include/cmsis_gcc.h ****      notice, this list of conditions and the following disclaimer.
+  14:Drivers/CMSIS/Include/cmsis_gcc.h ****    - Redistributions in binary form must reproduce the above copyright
+  15:Drivers/CMSIS/Include/cmsis_gcc.h ****      notice, this list of conditions and the following disclaimer in the
+  16:Drivers/CMSIS/Include/cmsis_gcc.h ****      documentation and/or other materials provided with the distribution.
+  17:Drivers/CMSIS/Include/cmsis_gcc.h ****    - Neither the name of ARM nor the names of its contributors may be used
+  18:Drivers/CMSIS/Include/cmsis_gcc.h ****      to endorse or promote products derived from this software without
+  19:Drivers/CMSIS/Include/cmsis_gcc.h ****      specific prior written permission.
+  20:Drivers/CMSIS/Include/cmsis_gcc.h ****    *
+  21:Drivers/CMSIS/Include/cmsis_gcc.h ****    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+  22:Drivers/CMSIS/Include/cmsis_gcc.h ****    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  23:Drivers/CMSIS/Include/cmsis_gcc.h ****    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+  24:Drivers/CMSIS/Include/cmsis_gcc.h ****    ARE DISCLAIMED. IN NO EVENT SHALL COPYRIGHT HOLDERS AND CONTRIBUTORS BE
+  25:Drivers/CMSIS/Include/cmsis_gcc.h ****    LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+  26:Drivers/CMSIS/Include/cmsis_gcc.h ****    CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+  27:Drivers/CMSIS/Include/cmsis_gcc.h ****    SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+  28:Drivers/CMSIS/Include/cmsis_gcc.h ****    INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+  29:Drivers/CMSIS/Include/cmsis_gcc.h ****    CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+  30:Drivers/CMSIS/Include/cmsis_gcc.h ****    ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+  31:Drivers/CMSIS/Include/cmsis_gcc.h ****    POSSIBILITY OF SUCH DAMAGE.
+  32:Drivers/CMSIS/Include/cmsis_gcc.h ****    ---------------------------------------------------------------------------*/
+  33:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  34:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+ARM GAS  /tmp/ccOfvrys.s 			page 6
+
+
+  35:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef __CMSIS_GCC_H
+  36:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __CMSIS_GCC_H
+  37:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  38:Drivers/CMSIS/Include/cmsis_gcc.h **** /* ignore some GCC warnings */
+  39:Drivers/CMSIS/Include/cmsis_gcc.h **** #if defined ( __GNUC__ )
+  40:Drivers/CMSIS/Include/cmsis_gcc.h **** #pragma GCC diagnostic push
+  41:Drivers/CMSIS/Include/cmsis_gcc.h **** #pragma GCC diagnostic ignored "-Wsign-conversion"
+  42:Drivers/CMSIS/Include/cmsis_gcc.h **** #pragma GCC diagnostic ignored "-Wconversion"
+  43:Drivers/CMSIS/Include/cmsis_gcc.h **** #pragma GCC diagnostic ignored "-Wunused-parameter"
+  44:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  45:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  46:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  47:Drivers/CMSIS/Include/cmsis_gcc.h **** /* ###########################  Core Function Access  ########################### */
+  48:Drivers/CMSIS/Include/cmsis_gcc.h **** /** \ingroup  CMSIS_Core_FunctionInterface
+  49:Drivers/CMSIS/Include/cmsis_gcc.h ****     \defgroup CMSIS_Core_RegAccFunctions CMSIS Core Register Access Functions
+  50:Drivers/CMSIS/Include/cmsis_gcc.h ****   @{
+  51:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
+  52:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  53:Drivers/CMSIS/Include/cmsis_gcc.h **** /**
+  54:Drivers/CMSIS/Include/cmsis_gcc.h ****   \brief   Enable IRQ Interrupts
+  55:Drivers/CMSIS/Include/cmsis_gcc.h ****   \details Enables IRQ interrupts by clearing the I-bit in the CPSR.
+  56:Drivers/CMSIS/Include/cmsis_gcc.h ****            Can only be executed in Privileged modes.
+  57:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
+  58:Drivers/CMSIS/Include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __enable_irq(void)
+  59:Drivers/CMSIS/Include/cmsis_gcc.h **** {
+  60:Drivers/CMSIS/Include/cmsis_gcc.h ****   __ASM volatile ("cpsie i" : : : "memory");
+  61:Drivers/CMSIS/Include/cmsis_gcc.h **** }
+  62:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  63:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  64:Drivers/CMSIS/Include/cmsis_gcc.h **** /**
+  65:Drivers/CMSIS/Include/cmsis_gcc.h ****   \brief   Disable IRQ Interrupts
+  66:Drivers/CMSIS/Include/cmsis_gcc.h ****   \details Disables IRQ interrupts by setting the I-bit in the CPSR.
+  67:Drivers/CMSIS/Include/cmsis_gcc.h ****   Can only be executed in Privileged modes.
+  68:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
+  69:Drivers/CMSIS/Include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __disable_irq(void)
+  70:Drivers/CMSIS/Include/cmsis_gcc.h **** {
+  71:Drivers/CMSIS/Include/cmsis_gcc.h ****   __ASM volatile ("cpsid i" : : : "memory");
+ 189              		.loc 2 71 0
+ 190              		.syntax unified
+ 191              	@ 71 "Drivers/CMSIS/Include/cmsis_gcc.h" 1
+ 192 0008 72B6     		cpsid i
+ 193              	@ 0 "" 2
+ 194              		.thumb
+ 195              		.syntax unified
+ 196              	.LBE21:
+ 197              	.LBE20:
+  67:Src/sst.c     **** 
+  68:Src/sst.c     ****     SST_INT_LOCK();
+  69:Src/sst.c     ****     SST_currPrio_ = (uintX_t)0;   /* set the priority for the SST idle loop */
+ 198              		.loc 1 69 0
+ 199 000a 074A     		ldr	r2, .L6
+ 200 000c 4FF00003 		mov	r3, #0
+ 201 0010 4FF00004 		mov	r4, #0
+ 202 0014 C2E90034 		strd	r3, [r2]
+  70:Src/sst.c     ****     SST_schedule_();                  /* process all events produced so far */
+ 203              		.loc 1 70 0
+ 204 0018 FFF7FEFF 		bl	SST_schedule_
+ARM GAS  /tmp/ccOfvrys.s 			page 7
+
+
+ 205              	.LBB22:
+ 206              	.LBB23:
+  60:Drivers/CMSIS/Include/cmsis_gcc.h **** }
+ 207              		.loc 2 60 0
+ 208              		.syntax unified
+ 209              	@ 60 "Drivers/CMSIS/Include/cmsis_gcc.h" 1
+ 210 001c 62B6     		cpsie i
+ 211              	@ 0 "" 2
+ 212              		.thumb
+ 213              		.syntax unified
+ 214              	.L5:
+ 215              	.LBE23:
+ 216              	.LBE22:
+  71:Src/sst.c     ****     SST_INT_UNLOCK();
+  72:Src/sst.c     **** 
+  73:Src/sst.c     ****     while(1){                                         /* the SST idle loop */
+  74:Src/sst.c     ****         SST_onIdle();                        /* invoke the on-idle callback */
+ 217              		.loc 1 74 0 discriminator 1
+ 218 001e FFF7FEFF 		bl	SST_onIdle
+  75:Src/sst.c     ****               SST_schedule_();
+ 219              		.loc 1 75 0 discriminator 1
+ 220 0022 FFF7FEFF 		bl	SST_schedule_
+  74:Src/sst.c     ****               SST_schedule_();
+ 221              		.loc 1 74 0 discriminator 1
+ 222 0026 FAE7     		b	.L5
+ 223              	.L7:
+ 224              		.align	2
+ 225              	.L6:
+ 226 0028 00000000 		.word	SST_currPrio_
+ 227              		.cfi_endproc
+ 228              	.LFE127:
+ 230              		.section	.rodata
+ 231              		.align	2
+ 232              	.LC0:
+ 233 0000 456E7472 		.ascii	"Entrou post => ID= %d \012\015\000"
+ 233      6F752070 
+ 233      6F737420 
+ 233      3D3E2049 
+ 233      443D2025 
+ 234 0019 000000   		.align	2
+ 235              	.LC1:
+ 236 001c 4368616D 		.ascii	"Chamou Schedule => SST_RS= %x \012\015\000"
+ 236      6F752053 
+ 236      63686564 
+ 236      756C6520 
+ 236      3D3E2053 
+ 237 003d 000000   		.align	2
+ 238              	.LC2:
+ 239 0040 4552524F 		.ascii	"ERROR_3\012\015\000"
+ 239      525F330A 
+ 239      0D00
+ 240 004a 0000     		.align	2
+ 241              	.LC3:
+ 242 004c 4552524F 		.ascii	"ERROR_P\012\015\000"
+ 242      525F500A 
+ 242      0D00
+ 243              		.section	.text.SST_post,"ax",%progbits
+ARM GAS  /tmp/ccOfvrys.s 			page 8
+
+
+ 244              		.align	1
+ 245              		.global	SST_post
+ 246              		.syntax unified
+ 247              		.thumb
+ 248              		.thumb_func
+ 249              		.fpu fpv4-sp-d16
+ 251              	SST_post:
+ 252              	.LFB128:
+  76:Src/sst.c     ****     }
+  77:Src/sst.c     **** }
+  78:Src/sst.c     **** /*..........................................................................*/
+  79:Src/sst.c     **** uintX_t SST_post(uintX_t prio, SSTSignal sig, SSTParam par) {
+ 253              		.loc 1 79 0
+ 254              		.cfi_startproc
+ 255              		@ args = 8, pretend = 0, frame = 64
+ 256              		@ frame_needed = 1, uses_anonymous_args = 0
+ 257 0000 90B5     		push	{r4, r7, lr}
+ 258              	.LCFI7:
+ 259              		.cfi_def_cfa_offset 12
+ 260              		.cfi_offset 4, -12
+ 261              		.cfi_offset 7, -8
+ 262              		.cfi_offset 14, -4
+ 263 0002 91B0     		sub	sp, sp, #68
+ 264              	.LCFI8:
+ 265              		.cfi_def_cfa_offset 80
+ 266 0004 00AF     		add	r7, sp, #0
+ 267              	.LCFI9:
+ 268              		.cfi_def_cfa_register 7
+ 269 0006 C7E90201 		strd	r0, [r7, #8]
+ 270 000a C7E90023 		strd	r2, [r7]
+  80:Src/sst.c     ****     char msg[40] = {0};
+ 271              		.loc 1 80 0
+ 272 000e 07F11403 		add	r3, r7, #20
+ 273 0012 2822     		movs	r2, #40
+ 274 0014 0021     		movs	r1, #0
+ 275 0016 1846     		mov	r0, r3
+ 276 0018 FFF7FEFF 		bl	memset
+  81:Src/sst.c     ****     sprintf(msg,"Entrou post => ID= %d \n\r",prio);
+ 277              		.loc 1 81 0
+ 278 001c 07F11400 		add	r0, r7, #20
+ 279 0020 D7E90223 		ldrd	r2, [r7, #8]
+ 280 0024 4F49     		ldr	r1, .L14
+ 281 0026 FFF7FEFF 		bl	sprintf
+  82:Src/sst.c     ****     HAL_UART_Transmit(&huart4, (uint8_t *)msg, 40, 10000);
+ 282              		.loc 1 82 0
+ 283 002a 07F11401 		add	r1, r7, #20
+ 284 002e 42F21073 		movw	r3, #10000
+ 285 0032 2822     		movs	r2, #40
+ 286 0034 4C48     		ldr	r0, .L14+4
+ 287 0036 FFF7FEFF 		bl	HAL_UART_Transmit
+  83:Src/sst.c     **** 
+  84:Src/sst.c     ****     TaskCB *tcb = &l_taskCB[prio - 1];
+ 288              		.loc 1 84 0
+ 289 003a D7E90234 		ldrd	r3, [r7, #8]
+ 290 003e 13F1FF33 		adds	r3, r3, #-1
+ 291 0042 44F1FF34 		adc	r4, r4, #-1
+ 292 0046 9B01     		lsls	r3, r3, #6
+ARM GAS  /tmp/ccOfvrys.s 			page 9
+
+
+ 293 0048 484A     		ldr	r2, .L14+8
+ 294 004a 1344     		add	r3, r3, r2
+ 295 004c FB63     		str	r3, [r7, #60]
+ 296              	.LBB24:
+ 297              	.LBB25:
+ 298              		.loc 2 71 0
+ 299              		.syntax unified
+ 300              	@ 71 "Drivers/CMSIS/Include/cmsis_gcc.h" 1
+ 301 004e 72B6     		cpsid i
+ 302              	@ 0 "" 2
+ 303              		.thumb
+ 304              		.syntax unified
+ 305              	.LBE25:
+ 306              	.LBE24:
+  85:Src/sst.c     ****     SST_INT_LOCK();
+  86:Src/sst.c     ****     if (tcb->nUsed__ < tcb->end__) {
+ 307              		.loc 1 86 0
+ 308 0050 FB6B     		ldr	r3, [r7, #60]
+ 309 0052 D3E90812 		ldrd	r1, [r3, #32]
+ 310 0056 FB6B     		ldr	r3, [r7, #60]
+ 311 0058 D3E90234 		ldrd	r3, [r3, #8]
+ 312 005c A242     		cmp	r2, r4
+ 313 005e 08BF     		it	eq
+ 314 0060 9942     		cmpeq	r1, r3
+ 315 0062 6DD2     		bcs	.L9
+  87:Src/sst.c     ****         tcb->queue__[tcb->head__].sig = sig;/* insert the event at the head */
+ 316              		.loc 1 87 0
+ 317 0064 FB6B     		ldr	r3, [r7, #60]
+ 318 0066 5A68     		ldr	r2, [r3, #4]
+ 319 0068 FB6B     		ldr	r3, [r7, #60]
+ 320 006a D3E90434 		ldrd	r3, [r3, #16]
+ 321 006e 1B01     		lsls	r3, r3, #4
+ 322 0070 1A44     		add	r2, r2, r3
+ 323 0072 D7E90034 		ldrd	r3, [r7]
+ 324 0076 C2E90034 		strd	r3, [r2]
+  88:Src/sst.c     ****         tcb->queue__[tcb->head__].par = par;
+ 325              		.loc 1 88 0
+ 326 007a FB6B     		ldr	r3, [r7, #60]
+ 327 007c 5A68     		ldr	r2, [r3, #4]
+ 328 007e FB6B     		ldr	r3, [r7, #60]
+ 329 0080 D3E90434 		ldrd	r3, [r3, #16]
+ 330 0084 1B01     		lsls	r3, r3, #4
+ 331 0086 1A44     		add	r2, r2, r3
+ 332 0088 D7E91434 		ldrd	r3, [r7, #80]
+ 333 008c C2E90234 		strd	r3, [r2, #8]
+  89:Src/sst.c     ****         if ((++tcb->head__) == tcb->end__) {
+ 334              		.loc 1 89 0
+ 335 0090 FB6B     		ldr	r3, [r7, #60]
+ 336 0092 D3E90434 		ldrd	r3, [r3, #16]
+ 337 0096 0133     		adds	r3, r3, #1
+ 338 0098 44F10004 		adc	r4, r4, #0
+ 339 009c FA6B     		ldr	r2, [r7, #60]
+ 340 009e C2E90434 		strd	r3, [r2, #16]
+ 341 00a2 FB6B     		ldr	r3, [r7, #60]
+ 342 00a4 D3E90412 		ldrd	r1, [r3, #16]
+ 343 00a8 FB6B     		ldr	r3, [r7, #60]
+ 344 00aa D3E90234 		ldrd	r3, [r3, #8]
+ARM GAS  /tmp/ccOfvrys.s 			page 10
+
+
+ 345 00ae A242     		cmp	r2, r4
+ 346 00b0 08BF     		it	eq
+ 347 00b2 9942     		cmpeq	r1, r3
+ 348 00b4 06D1     		bne	.L10
+  90:Src/sst.c     ****             tcb->head__ = (uintX_t)0;                      /* wrap the head */
+ 349              		.loc 1 90 0
+ 350 00b6 FA6B     		ldr	r2, [r7, #60]
+ 351 00b8 4FF00003 		mov	r3, #0
+ 352 00bc 4FF00004 		mov	r4, #0
+ 353 00c0 C2E90434 		strd	r3, [r2, #16]
+ 354              	.L10:
+  91:Src/sst.c     ****         }
+  92:Src/sst.c     ****         if ((++tcb->nUsed__) == (uintX_t)1) {           /* the first event? */
+ 355              		.loc 1 92 0
+ 356 00c4 FB6B     		ldr	r3, [r7, #60]
+ 357 00c6 D3E90834 		ldrd	r3, [r3, #32]
+ 358 00ca 0133     		adds	r3, r3, #1
+ 359 00cc 44F10004 		adc	r4, r4, #0
+ 360 00d0 FA6B     		ldr	r2, [r7, #60]
+ 361 00d2 C2E90834 		strd	r3, [r2, #32]
+ 362 00d6 FB6B     		ldr	r3, [r7, #60]
+ 363 00d8 D3E90834 		ldrd	r3, [r3, #32]
+ 364 00dc 002C     		cmp	r4, #0
+ 365 00de 08BF     		it	eq
+ 366 00e0 012B     		cmpeq	r3, #1
+ 367 00e2 20D1     		bne	.L11
+  93:Src/sst.c     **** 
+  94:Src/sst.c     ****             SST_readySet_ |= tcb->mask__;   /* insert task to the ready set */
+ 368              		.loc 1 94 0
+ 369 00e4 FB6B     		ldr	r3, [r7, #60]
+ 370 00e6 D3E90A12 		ldrd	r1, [r3, #40]
+ 371 00ea 214B     		ldr	r3, .L14+12
+ 372 00ec D3E90034 		ldrd	r3, [r3]
+ 373 00f0 43EA0103 		orr	r3, r3, r1
+ 374 00f4 44EA0204 		orr	r4, r4, r2
+ 375 00f8 1D4A     		ldr	r2, .L14+12
+ 376 00fa C2E90034 		strd	r3, [r2]
+  95:Src/sst.c     ****             SST_schedule_();            /* check for synchronous preemption */
+ 377              		.loc 1 95 0
+ 378 00fe FFF7FEFF 		bl	SST_schedule_
+  96:Src/sst.c     ****         
+  97:Src/sst.c     ****         sprintf(msg,"Chamou Schedule => SST_RS= %x \n\r",SST_readySet_);
+ 379              		.loc 1 97 0
+ 380 0102 1B4B     		ldr	r3, .L14+12
+ 381 0104 D3E90034 		ldrd	r3, [r3]
+ 382 0108 07F11400 		add	r0, r7, #20
+ 383 010c 1A46     		mov	r2, r3
+ 384 010e 2346     		mov	r3, r4
+ 385 0110 1849     		ldr	r1, .L14+16
+ 386 0112 FFF7FEFF 		bl	sprintf
+  98:Src/sst.c     ****         HAL_UART_Transmit(&huart4, (uint8_t *)msg, 40, 10000);
+ 387              		.loc 1 98 0
+ 388 0116 07F11401 		add	r1, r7, #20
+ 389 011a 42F21073 		movw	r3, #10000
+ 390 011e 2822     		movs	r2, #40
+ 391 0120 1148     		ldr	r0, .L14+4
+ 392 0122 FFF7FEFF 		bl	HAL_UART_Transmit
+ARM GAS  /tmp/ccOfvrys.s 			page 11
+
+
+ 393              	.L11:
+  99:Src/sst.c     ****         }
+ 100:Src/sst.c     ****         HAL_UART_Transmit(&huart4, (uint8_t *)"ERROR_3\n\r", 9, 10000);
+ 394              		.loc 1 100 0
+ 395 0126 42F21073 		movw	r3, #10000
+ 396 012a 0922     		movs	r2, #9
+ 397 012c 1249     		ldr	r1, .L14+20
+ 398 012e 0E48     		ldr	r0, .L14+4
+ 399 0130 FFF7FEFF 		bl	HAL_UART_Transmit
+ 400              	.LBB26:
+ 401              	.LBB27:
+  60:Drivers/CMSIS/Include/cmsis_gcc.h **** }
+ 402              		.loc 2 60 0
+ 403              		.syntax unified
+ 404              	@ 60 "Drivers/CMSIS/Include/cmsis_gcc.h" 1
+ 405 0134 62B6     		cpsie i
+ 406              	@ 0 "" 2
+ 407              		.thumb
+ 408              		.syntax unified
+ 409              	.LBE27:
+ 410              	.LBE26:
+ 101:Src/sst.c     ****         SST_INT_UNLOCK();
+ 102:Src/sst.c     ****         return (uintX_t)1;                     /* event successfully posted */
+ 411              		.loc 1 102 0
+ 412 0136 4FF00103 		mov	r3, #1
+ 413 013a 4FF00004 		mov	r4, #0
+ 414 013e 0BE0     		b	.L13
+ 415              	.L9:
+ 103:Src/sst.c     ****     }
+ 104:Src/sst.c     ****     else {
+ 105:Src/sst.c     ****         HAL_UART_Transmit(&huart4, (uint8_t *)"ERROR_P\n\r", 9, 10000);
+ 416              		.loc 1 105 0
+ 417 0140 42F21073 		movw	r3, #10000
+ 418 0144 0922     		movs	r2, #9
+ 419 0146 0D49     		ldr	r1, .L14+24
+ 420 0148 0748     		ldr	r0, .L14+4
+ 421 014a FFF7FEFF 		bl	HAL_UART_Transmit
+ 422              	.LBB28:
+ 423              	.LBB29:
+  60:Drivers/CMSIS/Include/cmsis_gcc.h **** }
+ 424              		.loc 2 60 0
+ 425              		.syntax unified
+ 426              	@ 60 "Drivers/CMSIS/Include/cmsis_gcc.h" 1
+ 427 014e 62B6     		cpsie i
+ 428              	@ 0 "" 2
+ 429              		.thumb
+ 430              		.syntax unified
+ 431              	.LBE29:
+ 432              	.LBE28:
+ 106:Src/sst.c     ****         SST_INT_UNLOCK();
+ 107:Src/sst.c     ****         return (uintX_t)0;              /* queue full, event posting failed */
+ 433              		.loc 1 107 0
+ 434 0150 4FF00003 		mov	r3, #0
+ 435 0154 4FF00004 		mov	r4, #0
+ 436              	.L13:
+ 108:Src/sst.c     ****     }
+ 109:Src/sst.c     **** }
+ARM GAS  /tmp/ccOfvrys.s 			page 12
+
+
+ 437              		.loc 1 109 0 discriminator 1
+ 438 0158 1846     		mov	r0, r3
+ 439 015a 2146     		mov	r1, r4
+ 440 015c 4437     		adds	r7, r7, #68
+ 441              	.LCFI10:
+ 442              		.cfi_def_cfa_offset 12
+ 443 015e BD46     		mov	sp, r7
+ 444              	.LCFI11:
+ 445              		.cfi_def_cfa_register 13
+ 446              		@ sp needed
+ 447 0160 90BD     		pop	{r4, r7, pc}
+ 448              	.L15:
+ 449 0162 00BF     		.align	2
+ 450              	.L14:
+ 451 0164 00000000 		.word	.LC0
+ 452 0168 00000000 		.word	huart4
+ 453 016c 00000000 		.word	l_taskCB
+ 454 0170 00000000 		.word	SST_readySet_
+ 455 0174 1C000000 		.word	.LC1
+ 456 0178 40000000 		.word	.LC2
+ 457 017c 4C000000 		.word	.LC3
+ 458              		.cfi_endproc
+ 459              	.LFE128:
+ 461              		.section	.text.SST_mutexLock,"ax",%progbits
+ 462              		.align	1
+ 463              		.global	SST_mutexLock
+ 464              		.syntax unified
+ 465              		.thumb
+ 466              		.thumb_func
+ 467              		.fpu fpv4-sp-d16
+ 469              	SST_mutexLock:
+ 470              	.LFB129:
+ 110:Src/sst.c     **** /*..........................................................................*/
+ 111:Src/sst.c     **** uintX_t SST_mutexLock(uintX_t prioCeiling) {
+ 471              		.loc 1 111 0
+ 472              		.cfi_startproc
+ 473              		@ args = 0, pretend = 0, frame = 16
+ 474              		@ frame_needed = 1, uses_anonymous_args = 0
+ 475              		@ link register save eliminated.
+ 476 0000 90B4     		push	{r4, r7}
+ 477              	.LCFI12:
+ 478              		.cfi_def_cfa_offset 8
+ 479              		.cfi_offset 4, -8
+ 480              		.cfi_offset 7, -4
+ 481 0002 84B0     		sub	sp, sp, #16
+ 482              	.LCFI13:
+ 483              		.cfi_def_cfa_offset 24
+ 484 0004 00AF     		add	r7, sp, #0
+ 485              	.LCFI14:
+ 486              		.cfi_def_cfa_register 7
+ 487 0006 C7E90001 		strd	r0, [r7]
+ 488              	.LBB30:
+ 489              	.LBB31:
+ 490              		.loc 2 71 0
+ 491              		.syntax unified
+ 492              	@ 71 "Drivers/CMSIS/Include/cmsis_gcc.h" 1
+ 493 000a 72B6     		cpsid i
+ARM GAS  /tmp/ccOfvrys.s 			page 13
+
+
+ 494              	@ 0 "" 2
+ 495              		.thumb
+ 496              		.syntax unified
+ 497              	.LBE31:
+ 498              	.LBE30:
+ 112:Src/sst.c     ****     uintX_t p;
+ 113:Src/sst.c     ****     SST_INT_LOCK();
+ 114:Src/sst.c     ****     p = SST_currPrio_;               /* the original SST priority to return */
+ 499              		.loc 1 114 0
+ 500 000c 0D4B     		ldr	r3, .L19
+ 501 000e D3E90034 		ldrd	r3, [r3]
+ 502 0012 C7E90234 		strd	r3, [r7, #8]
+ 115:Src/sst.c     ****     if (prioCeiling > SST_currPrio_) {
+ 503              		.loc 1 115 0
+ 504 0016 0B4B     		ldr	r3, .L19
+ 505 0018 D3E90012 		ldrd	r1, [r3]
+ 506 001c D7E90034 		ldrd	r3, [r7]
+ 507 0020 A242     		cmp	r2, r4
+ 508 0022 08BF     		it	eq
+ 509 0024 9942     		cmpeq	r1, r3
+ 510 0026 04D2     		bcs	.L17
+ 116:Src/sst.c     ****         SST_currPrio_ = prioCeiling;              /* raise the SST priority */
+ 511              		.loc 1 116 0
+ 512 0028 064A     		ldr	r2, .L19
+ 513 002a D7E90034 		ldrd	r3, [r7]
+ 514 002e C2E90034 		strd	r3, [r2]
+ 515              	.L17:
+ 516              	.LBB32:
+ 517              	.LBB33:
+  60:Drivers/CMSIS/Include/cmsis_gcc.h **** }
+ 518              		.loc 2 60 0
+ 519              		.syntax unified
+ 520              	@ 60 "Drivers/CMSIS/Include/cmsis_gcc.h" 1
+ 521 0032 62B6     		cpsie i
+ 522              	@ 0 "" 2
+ 523              		.thumb
+ 524              		.syntax unified
+ 525              	.LBE33:
+ 526              	.LBE32:
+ 117:Src/sst.c     ****     }
+ 118:Src/sst.c     ****     SST_INT_UNLOCK();
+ 119:Src/sst.c     ****     return p;
+ 527              		.loc 1 119 0
+ 528 0034 D7E90234 		ldrd	r3, [r7, #8]
+ 120:Src/sst.c     **** }
+ 529              		.loc 1 120 0
+ 530 0038 1846     		mov	r0, r3
+ 531 003a 2146     		mov	r1, r4
+ 532 003c 1037     		adds	r7, r7, #16
+ 533              	.LCFI15:
+ 534              		.cfi_def_cfa_offset 8
+ 535 003e BD46     		mov	sp, r7
+ 536              	.LCFI16:
+ 537              		.cfi_def_cfa_register 13
+ 538              		@ sp needed
+ 539 0040 90BC     		pop	{r4, r7}
+ 540              	.LCFI17:
+ARM GAS  /tmp/ccOfvrys.s 			page 14
+
+
+ 541              		.cfi_restore 7
+ 542              		.cfi_restore 4
+ 543              		.cfi_def_cfa_offset 0
+ 544 0042 7047     		bx	lr
+ 545              	.L20:
+ 546              		.align	2
+ 547              	.L19:
+ 548 0044 00000000 		.word	SST_currPrio_
+ 549              		.cfi_endproc
+ 550              	.LFE129:
+ 552              		.section	.text.SST_mutexUnlock,"ax",%progbits
+ 553              		.align	1
+ 554              		.global	SST_mutexUnlock
+ 555              		.syntax unified
+ 556              		.thumb
+ 557              		.thumb_func
+ 558              		.fpu fpv4-sp-d16
+ 560              	SST_mutexUnlock:
+ 561              	.LFB130:
+ 121:Src/sst.c     **** /*..........................................................................*/
+ 122:Src/sst.c     **** void SST_mutexUnlock(uintX_t orgPrio) {
+ 562              		.loc 1 122 0
+ 563              		.cfi_startproc
+ 564              		@ args = 0, pretend = 0, frame = 8
+ 565              		@ frame_needed = 1, uses_anonymous_args = 0
+ 566 0000 90B5     		push	{r4, r7, lr}
+ 567              	.LCFI18:
+ 568              		.cfi_def_cfa_offset 12
+ 569              		.cfi_offset 4, -12
+ 570              		.cfi_offset 7, -8
+ 571              		.cfi_offset 14, -4
+ 572 0002 83B0     		sub	sp, sp, #12
+ 573              	.LCFI19:
+ 574              		.cfi_def_cfa_offset 24
+ 575 0004 00AF     		add	r7, sp, #0
+ 576              	.LCFI20:
+ 577              		.cfi_def_cfa_register 7
+ 578 0006 C7E90001 		strd	r0, [r7]
+ 579              	.LBB34:
+ 580              	.LBB35:
+ 581              		.loc 2 71 0
+ 582              		.syntax unified
+ 583              	@ 71 "Drivers/CMSIS/Include/cmsis_gcc.h" 1
+ 584 000a 72B6     		cpsid i
+ 585              	@ 0 "" 2
+ 586              		.thumb
+ 587              		.syntax unified
+ 588              	.LBE35:
+ 589              	.LBE34:
+ 123:Src/sst.c     ****     SST_INT_LOCK();
+ 124:Src/sst.c     ****     if (orgPrio < SST_currPrio_) {
+ 590              		.loc 1 124 0
+ 591 000c 0A4B     		ldr	r3, .L23
+ 592 000e D3E90034 		ldrd	r3, [r3]
+ 593 0012 D7E90012 		ldrd	r1, [r7]
+ 594 0016 A242     		cmp	r2, r4
+ 595 0018 08BF     		it	eq
+ARM GAS  /tmp/ccOfvrys.s 			page 15
+
+
+ 596 001a 9942     		cmpeq	r1, r3
+ 597 001c 06D2     		bcs	.L22
+ 125:Src/sst.c     ****         SST_currPrio_ = orgPrio;    /* restore the saved priority to unlock */
+ 598              		.loc 1 125 0
+ 599 001e 064A     		ldr	r2, .L23
+ 600 0020 D7E90034 		ldrd	r3, [r7]
+ 601 0024 C2E90034 		strd	r3, [r2]
+ 126:Src/sst.c     ****         SST_schedule_();    /* invoke scheduler after lowering the priority */
+ 602              		.loc 1 126 0
+ 603 0028 FFF7FEFF 		bl	SST_schedule_
+ 604              	.L22:
+ 605              	.LBB36:
+ 606              	.LBB37:
+  60:Drivers/CMSIS/Include/cmsis_gcc.h **** }
+ 607              		.loc 2 60 0
+ 608              		.syntax unified
+ 609              	@ 60 "Drivers/CMSIS/Include/cmsis_gcc.h" 1
+ 610 002c 62B6     		cpsie i
+ 611              	@ 0 "" 2
+ 612              		.thumb
+ 613              		.syntax unified
+ 614              	.LBE37:
+ 615              	.LBE36:
+ 127:Src/sst.c     ****     }
+ 128:Src/sst.c     ****     SST_INT_UNLOCK();
+ 129:Src/sst.c     **** }
+ 616              		.loc 1 129 0
+ 617 002e 00BF     		nop
+ 618 0030 0C37     		adds	r7, r7, #12
+ 619              	.LCFI21:
+ 620              		.cfi_def_cfa_offset 12
+ 621 0032 BD46     		mov	sp, r7
+ 622              	.LCFI22:
+ 623              		.cfi_def_cfa_register 13
+ 624              		@ sp needed
+ 625 0034 90BD     		pop	{r4, r7, pc}
+ 626              	.L24:
+ 627 0036 00BF     		.align	2
+ 628              	.L23:
+ 629 0038 00000000 		.word	SST_currPrio_
+ 630              		.cfi_endproc
+ 631              	.LFE130:
+ 633              		.global	__aeabi_ul2d
+ 634              		.global	__aeabi_ddiv
+ 635              		.global	__aeabi_d2ulz
+ 636              		.section	.rodata
+ 637 0056 0000     		.align	2
+ 638              	.LC4:
+ 639 0058 5353545F 		.ascii	"SST_schedule_ IN while %x \012\015\000"
+ 639      73636865 
+ 639      64756C65 
+ 639      5F20494E 
+ 639      20776869 
+ 640 0075 000000   		.align	2
+ 641              	.LC5:
+ 642 0078 5353545F 		.ascii	"SST_schedule_ IN while 03 %x \012\015\000"
+ 642      73636865 
+ARM GAS  /tmp/ccOfvrys.s 			page 16
+
+
+ 642      64756C65 
+ 642      5F20494E 
+ 642      20776869 
+ 643              		.align	2
+ 644              	.LC6:
+ 645 0098 5353545F 		.ascii	"SST_schedule_ IN while 04 %x \012\015\000"
+ 645      73636865 
+ 645      64756C65 
+ 645      5F20494E 
+ 645      20776869 
+ 646              		.section	.text.SST_schedule_,"ax",%progbits
+ 647              		.align	1
+ 648              		.global	SST_schedule_
+ 649              		.syntax unified
+ 650              		.thumb
+ 651              		.thumb_func
+ 652              		.fpu fpv4-sp-d16
+ 654              	SST_schedule_:
+ 655              	.LFB131:
+ 130:Src/sst.c     **** /*..........................................................................*/
+ 131:Src/sst.c     **** /* NOTE: the SST scheduler is entered and exited with interrupts LOCKED */
+ 132:Src/sst.c     **** void SST_schedule_(void) {
+ 656              		.loc 1 132 0
+ 657              		.cfi_startproc
+ 658              		@ args = 0, pretend = 0, frame = 96
+ 659              		@ frame_needed = 1, uses_anonymous_args = 0
+ 660 0000 90B5     		push	{r4, r7, lr}
+ 661              	.LCFI23:
+ 662              		.cfi_def_cfa_offset 12
+ 663              		.cfi_offset 4, -12
+ 664              		.cfi_offset 7, -8
+ 665              		.cfi_offset 14, -4
+ 666 0002 9DB0     		sub	sp, sp, #116
+ 667              	.LCFI24:
+ 668              		.cfi_def_cfa_offset 128
+ 669 0004 04AF     		add	r7, sp, #16
+ 670              	.LCFI25:
+ 671              		.cfi_def_cfa 7, 112
+ 133:Src/sst.c     **** 
+ 134:Src/sst.c     **** 
+ 135:Src/sst.c     ****     uintX_t pin = SST_currPrio_;               /* save the initial priority */
+ 672              		.loc 1 135 0
+ 673 0006 884B     		ldr	r3, .L30+8
+ 674 0008 D3E90034 		ldrd	r3, [r3]
+ 675 000c C7E91434 		strd	r3, [r7, #80]
+ 136:Src/sst.c     ****     uintX_t p = (uintX_t) log2(SST_readySet_);                                          /* the new 
+ 676              		.loc 1 136 0
+ 677 0010 864B     		ldr	r3, .L30+12
+ 678 0012 D3E90034 		ldrd	r3, [r3]
+ 679 0016 1846     		mov	r0, r3
+ 680 0018 2146     		mov	r1, r4
+ 681 001a FFF7FEFF 		bl	__aeabi_ul2d
+ 682              	.LVL1:
+ 683 001e 0346     		mov	r3, r0
+ 684 0020 0C46     		mov	r4, r1
+ 685 0022 44EC103B 		vmov	d0, r3, r4
+ 686 0026 FFF7FEFF 		bl	log
+ARM GAS  /tmp/ccOfvrys.s 			page 17
+
+
+ 687 002a 51EC100B 		vmov	r0, r1, d0
+ 688 002e 7CA3     		adr	r3, .L30
+ 689 0030 D3E90023 		ldrd	r2, [r3]
+ 690 0034 FFF7FEFF 		bl	__aeabi_ddiv
+ 691              	.LVL2:
+ 692 0038 0346     		mov	r3, r0
+ 693 003a 0C46     		mov	r4, r1
+ 694 003c 1846     		mov	r0, r3
+ 695 003e 2146     		mov	r1, r4
+ 696 0040 FFF7FEFF 		bl	__aeabi_d2ulz
+ 697              	.LVL3:
+ 698 0044 0346     		mov	r3, r0
+ 699 0046 0C46     		mov	r4, r1
+ 700 0048 C7E91634 		strd	r3, [r7, #88]
+ 137:Src/sst.c     ****                             /* is the new priority higher than the initial? */
+ 138:Src/sst.c     **** 
+ 139:Src/sst.c     ****     //double d_p = (uintX_t) log2(SST_readySet_);
+ 140:Src/sst.c     ****     //nt pnew = p;
+ 141:Src/sst.c     ****     char msg[40] = {0};
+ 701              		.loc 1 141 0
+ 702 004c 07F12403 		add	r3, r7, #36
+ 703 0050 2822     		movs	r2, #40
+ 704 0052 0021     		movs	r1, #0
+ 705 0054 1846     		mov	r0, r3
+ 706 0056 FFF7FEFF 		bl	memset
+ 142:Src/sst.c     ****     //sprintf(msg,"SST_schedule_ => p= %3x  > pin = %3x \n\r", d_p,  pin);
+ 143:Src/sst.c     ****     //HAL_UART_Transmit(&huart4, (uint8_t *)msg, 40, 10000);
+ 144:Src/sst.c     ****     //memset(msg,0, 40);
+ 145:Src/sst.c     ****      /* if ((uintX_t)p > (uintX_t)pin){
+ 146:Src/sst.c     ****         sprintf(msg,"SST_schedule_ IN IF \n\r");
+ 147:Src/sst.c     ****         HAL_UART_Transmit(&huart4, (uint8_t *)msg, 40, 10000);
+ 148:Src/sst.c     ****     } */
+ 149:Src/sst.c     **** 
+ 150:Src/sst.c     ****     while ( p > pin ) {
+ 707              		.loc 1 150 0
+ 708 005a CEE0     		b	.L26
+ 709              	.L29:
+ 710              	.LBB38:
+ 151:Src/sst.c     ****         memset(msg,0, 40);
+ 711              		.loc 1 151 0
+ 712 005c 07F12403 		add	r3, r7, #36
+ 713 0060 2822     		movs	r2, #40
+ 714 0062 0021     		movs	r1, #0
+ 715 0064 1846     		mov	r0, r3
+ 716 0066 FFF7FEFF 		bl	memset
+ 152:Src/sst.c     ****         sprintf(msg,"SST_schedule_ IN while %x \n\r", p);
+ 717              		.loc 1 152 0
+ 718 006a 07F12400 		add	r0, r7, #36
+ 719 006e D7E91623 		ldrd	r2, [r7, #88]
+ 720 0072 6F49     		ldr	r1, .L30+16
+ 721 0074 FFF7FEFF 		bl	sprintf
+ 153:Src/sst.c     ****         HAL_UART_Transmit(&huart4, (uint8_t *)msg, 40, 10000);
+ 722              		.loc 1 153 0
+ 723 0078 07F12401 		add	r1, r7, #36
+ 724 007c 42F21073 		movw	r3, #10000
+ 725 0080 2822     		movs	r2, #40
+ 726 0082 6C48     		ldr	r0, .L30+20
+ARM GAS  /tmp/ccOfvrys.s 			page 18
+
+
+ 727 0084 FFF7FEFF 		bl	HAL_UART_Transmit
+ 154:Src/sst.c     **** 
+ 155:Src/sst.c     ****         TaskCB *tcb  = &l_taskCB[p - 1];
+ 728              		.loc 1 155 0
+ 729 0088 D7E91634 		ldrd	r3, [r7, #88]
+ 730 008c 13F1FF33 		adds	r3, r3, #-1
+ 731 0090 44F1FF34 		adc	r4, r4, #-1
+ 732 0094 9B01     		lsls	r3, r3, #6
+ 733 0096 684A     		ldr	r2, .L30+24
+ 734 0098 1344     		add	r3, r3, r2
+ 735 009a FB64     		str	r3, [r7, #76]
+ 156:Src/sst.c     ****                                           /* get the event out of the queue */
+ 157:Src/sst.c     ****         SSTEvent e = tcb->queue__[tcb->tail__];
+ 736              		.loc 1 157 0
+ 737 009c FB6C     		ldr	r3, [r7, #76]
+ 738 009e 5A68     		ldr	r2, [r3, #4]
+ 739 00a0 FB6C     		ldr	r3, [r7, #76]
+ 740 00a2 D3E90634 		ldrd	r3, [r3, #24]
+ 741 00a6 1B01     		lsls	r3, r3, #4
+ 742 00a8 1344     		add	r3, r3, r2
+ 743 00aa 07F11004 		add	r4, r7, #16
+ 744 00ae 0FCB     		ldm	r3, {r0, r1, r2, r3}
+ 745 00b0 84E80F00 		stm	r4, {r0, r1, r2, r3}
+ 158:Src/sst.c     ****         if ((++tcb->tail__) == tcb->end__) {
+ 746              		.loc 1 158 0
+ 747 00b4 FB6C     		ldr	r3, [r7, #76]
+ 748 00b6 D3E90634 		ldrd	r3, [r3, #24]
+ 749 00ba 0133     		adds	r3, r3, #1
+ 750 00bc 44F10004 		adc	r4, r4, #0
+ 751 00c0 FA6C     		ldr	r2, [r7, #76]
+ 752 00c2 C2E90634 		strd	r3, [r2, #24]
+ 753 00c6 FB6C     		ldr	r3, [r7, #76]
+ 754 00c8 D3E90612 		ldrd	r1, [r3, #24]
+ 755 00cc FB6C     		ldr	r3, [r7, #76]
+ 756 00ce D3E90234 		ldrd	r3, [r3, #8]
+ 757 00d2 A242     		cmp	r2, r4
+ 758 00d4 08BF     		it	eq
+ 759 00d6 9942     		cmpeq	r1, r3
+ 760 00d8 06D1     		bne	.L27
+ 159:Src/sst.c     ****             tcb->tail__ = (uintX_t)0;
+ 761              		.loc 1 159 0
+ 762 00da FA6C     		ldr	r2, [r7, #76]
+ 763 00dc 4FF00003 		mov	r3, #0
+ 764 00e0 4FF00004 		mov	r4, #0
+ 765 00e4 C2E90634 		strd	r3, [r2, #24]
+ 766              	.L27:
+ 160:Src/sst.c     ****         }
+ 161:Src/sst.c     ****         if ((--tcb->nUsed__) == (uintX_t)0) {/* is the queue becoming empty?*/
+ 767              		.loc 1 161 0
+ 768 00e8 FB6C     		ldr	r3, [r7, #76]
+ 769 00ea D3E90834 		ldrd	r3, [r3, #32]
+ 770 00ee 13F1FF33 		adds	r3, r3, #-1
+ 771 00f2 44F1FF34 		adc	r4, r4, #-1
+ 772 00f6 FA6C     		ldr	r2, [r7, #76]
+ 773 00f8 C2E90834 		strd	r3, [r2, #32]
+ 774 00fc FB6C     		ldr	r3, [r7, #76]
+ 775 00fe D3E90834 		ldrd	r3, [r3, #32]
+ARM GAS  /tmp/ccOfvrys.s 			page 19
+
+
+ 776 0102 2343     		orrs	r3, r3, r4
+ 777 0104 10D1     		bne	.L28
+ 162:Src/sst.c     ****             SST_readySet_ &= ~tcb->mask__;     /* remove from the ready set */
+ 778              		.loc 1 162 0
+ 779 0106 FB6C     		ldr	r3, [r7, #76]
+ 780 0108 D3E90A34 		ldrd	r3, [r3, #40]
+ 781 010c 6FEA0301 		mvn	r1, r3
+ 782 0110 6FEA0402 		mvn	r2, r4
+ 783 0114 454B     		ldr	r3, .L30+12
+ 784 0116 D3E90034 		ldrd	r3, [r3]
+ 785 011a 03EA0103 		and	r3, r3, r1
+ 786 011e 04EA0204 		and	r4, r4, r2
+ 787 0122 424A     		ldr	r2, .L30+12
+ 788 0124 C2E90034 		strd	r3, [r2]
+ 789              	.L28:
+ 163:Src/sst.c     ****         }
+ 164:Src/sst.c     ****         SST_currPrio_ = p;        /* this becomes the current task priority */
+ 790              		.loc 1 164 0
+ 791 0128 3F4A     		ldr	r2, .L30+8
+ 792 012a D7E91634 		ldrd	r3, [r7, #88]
+ 793 012e C2E90034 		strd	r3, [r2]
+ 165:Src/sst.c     ****         //SST_INT_UNLOCK();                          /* unlock the interrupts */
+ 166:Src/sst.c     **** memset(msg,0, 40);
+ 794              		.loc 1 166 0
+ 795 0132 07F12403 		add	r3, r7, #36
+ 796 0136 2822     		movs	r2, #40
+ 797 0138 0021     		movs	r1, #0
+ 798 013a 1846     		mov	r0, r3
+ 799 013c FFF7FEFF 		bl	memset
+ 167:Src/sst.c     ****         sprintf(msg,"SST_schedule_ IN while 03 %x \n\r", p);
+ 800              		.loc 1 167 0
+ 801 0140 07F12400 		add	r0, r7, #36
+ 802 0144 D7E91623 		ldrd	r2, [r7, #88]
+ 803 0148 3C49     		ldr	r1, .L30+28
+ 804 014a FFF7FEFF 		bl	sprintf
+ 168:Src/sst.c     ****         HAL_UART_Transmit(&huart4, (uint8_t *)msg, 40, 10000);
+ 805              		.loc 1 168 0
+ 806 014e 07F12401 		add	r1, r7, #36
+ 807 0152 42F21073 		movw	r3, #10000
+ 808 0156 2822     		movs	r2, #40
+ 809 0158 3648     		ldr	r0, .L30+20
+ 810 015a FFF7FEFF 		bl	HAL_UART_Transmit
+ 169:Src/sst.c     ****         SSTEvent ie;
+ 170:Src/sst.c     ****         ie.sig = SST_SIGNAL_TASKINIT;
+ 811              		.loc 1 170 0
+ 812 015e 4FF00003 		mov	r3, #0
+ 813 0162 4FF00004 		mov	r4, #0
+ 814 0166 C7E90034 		strd	r3, [r7]
+ 171:Src/sst.c     ****         ie.par = 0;
+ 815              		.loc 1 171 0
+ 816 016a 4FF00003 		mov	r3, #0
+ 817 016e 4FF00004 		mov	r4, #0
+ 818 0172 C7E90234 		strd	r3, [r7, #8]
+ 172:Src/sst.c     ****         tcb->task__(ie,tcb->s__,tcb->mb__,tcb->q__);
+ 819              		.loc 1 172 0
+ 820 0176 FB6C     		ldr	r3, [r7, #76]
+ 821 0178 1C68     		ldr	r4, [r3]
+ARM GAS  /tmp/ccOfvrys.s 			page 20
+
+
+ 822 017a FB6C     		ldr	r3, [r7, #76]
+ 823 017c 1B6B     		ldr	r3, [r3, #48]
+ 824 017e FA6C     		ldr	r2, [r7, #76]
+ 825 0180 526B     		ldr	r2, [r2, #52]
+ 826 0182 F96C     		ldr	r1, [r7, #76]
+ 827 0184 896B     		ldr	r1, [r1, #56]
+ 828 0186 0291     		str	r1, [sp, #8]
+ 829 0188 0192     		str	r2, [sp, #4]
+ 830 018a 0093     		str	r3, [sp]
+ 831 018c 3B46     		mov	r3, r7
+ 832 018e 0FCB     		ldm	r3, {r0, r1, r2, r3}
+ 833 0190 A047     		blx	r4
+ 834              	.LVL4:
+ 173:Src/sst.c     ****                                      /* call the SST task */
+ 174:Src/sst.c     **** 
+ 175:Src/sst.c     **** memset(msg,0, 40);
+ 835              		.loc 1 175 0
+ 836 0192 07F12403 		add	r3, r7, #36
+ 837 0196 2822     		movs	r2, #40
+ 838 0198 0021     		movs	r1, #0
+ 839 019a 1846     		mov	r0, r3
+ 840 019c FFF7FEFF 		bl	memset
+ 176:Src/sst.c     ****         sprintf(msg,"SST_schedule_ IN while 04 %x \n\r", p);
+ 841              		.loc 1 176 0
+ 842 01a0 07F12400 		add	r0, r7, #36
+ 843 01a4 D7E91623 		ldrd	r2, [r7, #88]
+ 844 01a8 2549     		ldr	r1, .L30+32
+ 845 01aa FFF7FEFF 		bl	sprintf
+ 177:Src/sst.c     ****         HAL_UART_Transmit(&huart4, (uint8_t *)msg, 40, 10000);
+ 846              		.loc 1 177 0
+ 847 01ae 07F12401 		add	r1, r7, #36
+ 848 01b2 42F21073 		movw	r3, #10000
+ 849 01b6 2822     		movs	r2, #40
+ 850 01b8 1E48     		ldr	r0, .L30+20
+ 851 01ba FFF7FEFF 		bl	HAL_UART_Transmit
+ 178:Src/sst.c     ****         //SST_INT_LOCK();            /* lock the interrupts for the next pass */
+ 179:Src/sst.c     **** 
+ 180:Src/sst.c     ****         p = (uintX_t) log2(SST_readySet_);
+ 852              		.loc 1 180 0
+ 853 01be 1B4B     		ldr	r3, .L30+12
+ 854 01c0 D3E90034 		ldrd	r3, [r3]
+ 855 01c4 1846     		mov	r0, r3
+ 856 01c6 2146     		mov	r1, r4
+ 857 01c8 FFF7FEFF 		bl	__aeabi_ul2d
+ 858              	.LVL5:
+ 859 01cc 0346     		mov	r3, r0
+ 860 01ce 0C46     		mov	r4, r1
+ 861 01d0 44EC103B 		vmov	d0, r3, r4
+ 862 01d4 FFF7FEFF 		bl	log
+ 863 01d8 51EC100B 		vmov	r0, r1, d0
+ 864 01dc 10A3     		adr	r3, .L30
+ 865 01de D3E90023 		ldrd	r2, [r3]
+ 866 01e2 FFF7FEFF 		bl	__aeabi_ddiv
+ 867              	.LVL6:
+ 868 01e6 0346     		mov	r3, r0
+ 869 01e8 0C46     		mov	r4, r1
+ 870 01ea 1846     		mov	r0, r3
+ARM GAS  /tmp/ccOfvrys.s 			page 21
+
+
+ 871 01ec 2146     		mov	r1, r4
+ 872 01ee FFF7FEFF 		bl	__aeabi_d2ulz
+ 873              	.LVL7:
+ 874 01f2 0346     		mov	r3, r0
+ 875 01f4 0C46     		mov	r4, r1
+ 876 01f6 C7E91634 		strd	r3, [r7, #88]
+ 877              	.L26:
+ 878              	.LBE38:
+ 150:Src/sst.c     ****         memset(msg,0, 40);
+ 879              		.loc 1 150 0
+ 880 01fa D7E91634 		ldrd	r3, [r7, #88]
+ 881 01fe D7E91412 		ldrd	r1, [r7, #80]
+ 882 0202 A242     		cmp	r2, r4
+ 883 0204 08BF     		it	eq
+ 884 0206 9942     		cmpeq	r1, r3
+ 885 0208 FFF428AF 		bcc	.L29
+ 181:Src/sst.c     ****     }
+ 182:Src/sst.c     ****     SST_currPrio_ = pin;                    /* restore the initial priority */
+ 886              		.loc 1 182 0
+ 887 020c 064A     		ldr	r2, .L30+8
+ 888 020e D7E91434 		ldrd	r3, [r7, #80]
+ 889 0212 C2E90034 		strd	r3, [r2]
+ 183:Src/sst.c     **** }
+ 890              		.loc 1 183 0
+ 891 0216 00BF     		nop
+ 892 0218 6437     		adds	r7, r7, #100
+ 893              	.LCFI26:
+ 894              		.cfi_def_cfa_offset 12
+ 895 021a BD46     		mov	sp, r7
+ 896              	.LCFI27:
+ 897              		.cfi_def_cfa_register 13
+ 898              		@ sp needed
+ 899 021c 90BD     		pop	{r4, r7, pc}
+ 900              	.L31:
+ 901 021e 00BF     		.align	3
+ 902              	.L30:
+ 903 0220 EF39FAFE 		.word	4277811695
+ 904 0224 422EE63F 		.word	1072049730
+ 905 0228 00000000 		.word	SST_currPrio_
+ 906 022c 00000000 		.word	SST_readySet_
+ 907 0230 58000000 		.word	.LC4
+ 908 0234 00000000 		.word	huart4
+ 909 0238 00000000 		.word	l_taskCB
+ 910 023c 78000000 		.word	.LC5
+ 911 0240 98000000 		.word	.LC6
+ 912              		.cfi_endproc
+ 913              	.LFE131:
+ 915              		.text
+ 916              	.Letext0:
+ 917              		.file 3 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 918              		.file 4 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 919              		.file 5 "Drivers/CMSIS/Include/core_cm4.h"
+ 920              		.file 6 "Drivers/CMSIS/Device/ST/STM32L4xx/Include/system_stm32l4xx.h"
+ 921              		.file 7 "Drivers/CMSIS/Device/ST/STM32L4xx/Include/stm32l476xx.h"
+ 922              		.file 8 "/usr/arm-none-eabi/include/sys/lock.h"
+ 923              		.file 9 "/usr/arm-none-eabi/include/sys/_types.h"
+ 924              		.file 10 "/usr/lib/gcc/arm-none-eabi/6.2.0/include/stddef.h"
+ARM GAS  /tmp/ccOfvrys.s 			page 22
+
+
+ 925              		.file 11 "/usr/arm-none-eabi/include/sys/reent.h"
+ 926              		.file 12 "Inc/uintx.h"
+ 927              		.file 13 "Inc/semaphore.h"
+ 928              		.file 14 "Inc/mailbox.h"
+ 929              		.file 15 "Inc/queue.h"
+ 930              		.file 16 "Inc/sst.h"
+ 931              		.file 17 "Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_def.h"
+ 932              		.file 18 "Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_dma.h"
+ 933              		.file 19 "Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_uart.h"
+ 934              		.file 20 "Inc/usart.h"
+ 935              		.file 21 "<built-in>"
+ARM GAS  /tmp/ccOfvrys.s 			page 23
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 sst.c
+     /tmp/ccOfvrys.s:22     .bss.SST_currPrio_:0000000000000000 SST_currPrio_
+     /tmp/ccOfvrys.s:19     .bss.SST_currPrio_:0000000000000000 $d
+     /tmp/ccOfvrys.s:29     .bss.SST_readySet_:0000000000000000 SST_readySet_
+     /tmp/ccOfvrys.s:26     .bss.SST_readySet_:0000000000000000 $d
+     /tmp/ccOfvrys.s:32     .bss.l_taskCB:0000000000000000 $d
+     /tmp/ccOfvrys.s:35     .bss.l_taskCB:0000000000000000 l_taskCB
+     /tmp/ccOfvrys.s:38     .text.SST_task:0000000000000000 $t
+     /tmp/ccOfvrys.s:45     .text.SST_task:0000000000000000 SST_task
+     /tmp/ccOfvrys.s:156    .text.SST_task:00000000000000bc $d
+     /tmp/ccOfvrys.s:161    .text.SST_run:0000000000000000 $t
+     /tmp/ccOfvrys.s:168    .text.SST_run:0000000000000000 SST_run
+     /tmp/ccOfvrys.s:654    .text.SST_schedule_:0000000000000000 SST_schedule_
+     /tmp/ccOfvrys.s:226    .text.SST_run:0000000000000028 $d
+     /tmp/ccOfvrys.s:231    .rodata:0000000000000000 $d
+     /tmp/ccOfvrys.s:244    .text.SST_post:0000000000000000 $t
+     /tmp/ccOfvrys.s:251    .text.SST_post:0000000000000000 SST_post
+     /tmp/ccOfvrys.s:451    .text.SST_post:0000000000000164 $d
+     /tmp/ccOfvrys.s:462    .text.SST_mutexLock:0000000000000000 $t
+     /tmp/ccOfvrys.s:469    .text.SST_mutexLock:0000000000000000 SST_mutexLock
+     /tmp/ccOfvrys.s:548    .text.SST_mutexLock:0000000000000044 $d
+     /tmp/ccOfvrys.s:553    .text.SST_mutexUnlock:0000000000000000 $t
+     /tmp/ccOfvrys.s:560    .text.SST_mutexUnlock:0000000000000000 SST_mutexUnlock
+     /tmp/ccOfvrys.s:629    .text.SST_mutexUnlock:0000000000000038 $d
+     /tmp/ccOfvrys.s:647    .text.SST_schedule_:0000000000000000 $t
+     /tmp/ccOfvrys.s:903    .text.SST_schedule_:0000000000000220 $d
+                     .debug_frame:0000000000000010 $d
+
+UNDEFINED SYMBOLS
+SST_start
+SST_onIdle
+memset
+sprintf
+HAL_UART_Transmit
+huart4
+__aeabi_ul2d
+__aeabi_ddiv
+__aeabi_d2ulz
+log

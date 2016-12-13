@@ -1,0 +1,1116 @@
+ARM GAS  /tmp/cclnqMMG.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 6
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"mytask.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.global	sendMSG
+  18              		.section	.bss.sendMSG,"aw",%nobits
+  19              		.align	2
+  22              	sendMSG:
+  23 0000 00000000 		.space	40
+  23      00000000 
+  23      00000000 
+  23      00000000 
+  23      00000000 
+  24              		.comm	myTask_EQ,64,8
+  25              		.global	mytask_counter
+  26              		.section	.data.mytask_counter,"aw",%progbits
+  27              		.align	2
+  30              	mytask_counter:
+  31 0000 FF000000 		.word	255
+  32              		.section	.rodata
+  33              		.align	2
+  34              	.LC0:
+  35 0000 74727969 		.ascii	"trying to use semaphore => \000"
+  35      6E672074 
+  35      6F207573 
+  35      65207365 
+  35      6D617068 
+  36              		.align	2
+  37              	.LC1:
+  38 001c 25732049 		.ascii	"%s ID=%d \012\015\000"
+  38      443D2564 
+  38      200A0D00 
+  39              		.align	2
+  40              	.LC2:
+  41 0028 53656D61 		.ascii	"Semaphore Down => ID=%d \012\015\000"
+  41      70686F72 
+  41      6520446F 
+  41      776E203D 
+  41      3E204944 
+  42 0043 00       		.align	2
+  43              	.LC3:
+  44 0044 53656D61 		.ascii	"Semaphore Up => ID=%d \012\015\000"
+  44      70686F72 
+  44      65205570 
+  44      203D3E20 
+ARM GAS  /tmp/cclnqMMG.s 			page 2
+
+
+  44      49443D25 
+  45 005d 000000   		.align	2
+  46              	.LC4:
+  47 0060 53656D61 		.ascii	"Semaphore Busy => ID=%d \012\015\000"
+  47      70686F72 
+  47      65204275 
+  47      7379203D 
+  47      3E204944 
+  48              		.section	.text.myTask,"ax",%progbits
+  49              		.align	1
+  50              		.global	myTask
+  51              		.syntax unified
+  52              		.thumb
+  53              		.thumb_func
+  54              		.fpu fpv4-sp-d16
+  56              	myTask:
+  57              	.LFB126:
+  58              		.file 1 "Src/mytask.c"
+   1:Src/mytask.c  **** #include "mytask.h"
+   2:Src/mytask.c  **** #include "stddef.h"
+   3:Src/mytask.c  **** #include "stm32l4xx_hal.h"
+   4:Src/mytask.c  **** #include "usart.h"
+   5:Src/mytask.c  **** #include <stdio.h>
+   6:Src/mytask.c  **** 
+   7:Src/mytask.c  **** char sendMSG[40] = {0};
+   8:Src/mytask.c  **** 
+   9:Src/mytask.c  **** void delayNaManha(int delay);
+  10:Src/mytask.c  **** 
+  11:Src/mytask.c  **** 
+  12:Src/mytask.c  **** SSTEvent myTask_EQ[myTask_EVQL];
+  13:Src/mytask.c  **** int mytask_counter=0xFF;
+  14:Src/mytask.c  **** void myTask(SSTEvent event , Semaphore *s, MailBox *mb, Queue *q){
+  59              		.loc 1 14 0
+  60              		.cfi_startproc
+  61              		@ args = 12, pretend = 0, frame = 24
+  62              		@ frame_needed = 1, uses_anonymous_args = 0
+  63 0000 90B5     		push	{r4, r7, lr}
+  64              	.LCFI0:
+  65              		.cfi_def_cfa_offset 12
+  66              		.cfi_offset 4, -12
+  67              		.cfi_offset 7, -8
+  68              		.cfi_offset 14, -4
+  69 0002 87B0     		sub	sp, sp, #28
+  70              	.LCFI1:
+  71              		.cfi_def_cfa_offset 40
+  72 0004 00AF     		add	r7, sp, #0
+  73              	.LCFI2:
+  74              		.cfi_def_cfa_register 7
+  75 0006 3C46     		mov	r4, r7
+  76 0008 84E80F00 		stm	r4, {r0, r1, r2, r3}
+  15:Src/mytask.c  **** 	uint8_t exec = do_sem_down(s,myTask_ID);
+  77              		.loc 1 15 0
+  78 000c 4FF00202 		mov	r2, #2
+  79 0010 4FF00003 		mov	r3, #0
+  80 0014 B86A     		ldr	r0, [r7, #40]
+  81 0016 FFF7FEFF 		bl	do_sem_down
+  82 001a 0346     		mov	r3, r0
+ARM GAS  /tmp/cclnqMMG.s 			page 3
+
+
+  83 001c FB75     		strb	r3, [r7, #23]
+  16:Src/mytask.c  **** 	
+  17:Src/mytask.c  **** 	memset(sendMSG, 0, 40);
+  84              		.loc 1 17 0
+  85 001e 2822     		movs	r2, #40
+  86 0020 0021     		movs	r1, #0
+  87 0022 2B48     		ldr	r0, .L5
+  88 0024 FFF7FEFF 		bl	memset
+  18:Src/mytask.c  **** 	sprintf(sendMSG,"%s ID=%d \n\r",semMSG,myTask_ID);
+  89              		.loc 1 18 0
+  90 0028 0223     		movs	r3, #2
+  91 002a 2A4A     		ldr	r2, .L5+4
+  92 002c 2A49     		ldr	r1, .L5+8
+  93 002e 2848     		ldr	r0, .L5
+  94 0030 FFF7FEFF 		bl	sprintf
+  19:Src/mytask.c  **** 	HAL_UART_Transmit(&huart4, (uint8_t *)sendMSG, 40, 10000);
+  95              		.loc 1 19 0
+  96 0034 42F21073 		movw	r3, #10000
+  97 0038 2822     		movs	r2, #40
+  98 003a 2549     		ldr	r1, .L5
+  99 003c 2748     		ldr	r0, .L5+12
+ 100 003e FFF7FEFF 		bl	HAL_UART_Transmit
+  20:Src/mytask.c  **** 	if(exec == OK){
+ 101              		.loc 1 20 0
+ 102 0042 FB7D     		ldrb	r3, [r7, #23]	@ zero_extendqisi2
+ 103 0044 022B     		cmp	r3, #2
+ 104 0046 2ED1     		bne	.L2
+  21:Src/mytask.c  **** 	memset(sendMSG, 0, 40);
+ 105              		.loc 1 21 0
+ 106 0048 2822     		movs	r2, #40
+ 107 004a 0021     		movs	r1, #0
+ 108 004c 2048     		ldr	r0, .L5
+ 109 004e FFF7FEFF 		bl	memset
+  22:Src/mytask.c  **** 	sprintf(sendMSG,"Semaphore Down => ID=%d \n\r",myTask_ID);
+ 110              		.loc 1 22 0
+ 111 0052 0222     		movs	r2, #2
+ 112 0054 2249     		ldr	r1, .L5+16
+ 113 0056 1E48     		ldr	r0, .L5
+ 114 0058 FFF7FEFF 		bl	sprintf
+  23:Src/mytask.c  **** 	HAL_UART_Transmit(&huart4, (uint8_t *)sendMSG, 40, 10000);
+ 115              		.loc 1 23 0
+ 116 005c 42F21073 		movw	r3, #10000
+ 117 0060 2822     		movs	r2, #40
+ 118 0062 1B49     		ldr	r1, .L5
+ 119 0064 1D48     		ldr	r0, .L5+12
+ 120 0066 FFF7FEFF 		bl	HAL_UART_Transmit
+  24:Src/mytask.c  **** 
+  25:Src/mytask.c  **** 	//SST_post(myTask3_ID,SST_SIGNAL_TASKINIT,0);
+  26:Src/mytask.c  **** 	HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_RESET);
+ 121              		.loc 1 26 0
+ 122 006a 0022     		movs	r2, #0
+ 123 006c 8021     		movs	r1, #128
+ 124 006e 1D48     		ldr	r0, .L5+20
+ 125 0070 FFF7FEFF 		bl	HAL_GPIO_WritePin
+  27:Src/mytask.c  **** 	delayNaManha(1000);
+ 126              		.loc 1 27 0
+ 127 0074 4FF47A70 		mov	r0, #1000
+ARM GAS  /tmp/cclnqMMG.s 			page 4
+
+
+ 128 0078 FFF7FEFF 		bl	delayNaManha
+  28:Src/mytask.c  **** 	do_sem_up(s);
+ 129              		.loc 1 28 0
+ 130 007c B86A     		ldr	r0, [r7, #40]
+ 131 007e FFF7FEFF 		bl	do_sem_up
+  29:Src/mytask.c  **** 
+  30:Src/mytask.c  **** 	memset(sendMSG, 0, 40);
+ 132              		.loc 1 30 0
+ 133 0082 2822     		movs	r2, #40
+ 134 0084 0021     		movs	r1, #0
+ 135 0086 1248     		ldr	r0, .L5
+ 136 0088 FFF7FEFF 		bl	memset
+  31:Src/mytask.c  **** 	sprintf(sendMSG,"Semaphore Up => ID=%d \n\r",myTask_ID);
+ 137              		.loc 1 31 0
+ 138 008c 0222     		movs	r2, #2
+ 139 008e 1649     		ldr	r1, .L5+24
+ 140 0090 0F48     		ldr	r0, .L5
+ 141 0092 FFF7FEFF 		bl	sprintf
+  32:Src/mytask.c  **** 	HAL_UART_Transmit(&huart4, (uint8_t *)sendMSG, 40, 10000);
+ 142              		.loc 1 32 0
+ 143 0096 42F21073 		movw	r3, #10000
+ 144 009a 2822     		movs	r2, #40
+ 145 009c 0C49     		ldr	r1, .L5
+ 146 009e 0F48     		ldr	r0, .L5+12
+ 147 00a0 FFF7FEFF 		bl	HAL_UART_Transmit
+  33:Src/mytask.c  **** 	}else{
+  34:Src/mytask.c  **** 		memset(sendMSG, 0, 40);
+  35:Src/mytask.c  **** 		sprintf(sendMSG,"Semaphore Busy => ID=%d \n\r",myTask_ID);
+  36:Src/mytask.c  **** 		HAL_UART_Transmit(&huart4, (uint8_t *)sendMSG, 40, 10000);
+  37:Src/mytask.c  **** 	}
+  38:Src/mytask.c  **** }
+ 148              		.loc 1 38 0
+ 149 00a4 10E0     		b	.L4
+ 150              	.L2:
+  34:Src/mytask.c  **** 		sprintf(sendMSG,"Semaphore Busy => ID=%d \n\r",myTask_ID);
+ 151              		.loc 1 34 0
+ 152 00a6 2822     		movs	r2, #40
+ 153 00a8 0021     		movs	r1, #0
+ 154 00aa 0948     		ldr	r0, .L5
+ 155 00ac FFF7FEFF 		bl	memset
+  35:Src/mytask.c  **** 		HAL_UART_Transmit(&huart4, (uint8_t *)sendMSG, 40, 10000);
+ 156              		.loc 1 35 0
+ 157 00b0 0222     		movs	r2, #2
+ 158 00b2 0E49     		ldr	r1, .L5+28
+ 159 00b4 0648     		ldr	r0, .L5
+ 160 00b6 FFF7FEFF 		bl	sprintf
+  36:Src/mytask.c  **** 	}
+ 161              		.loc 1 36 0
+ 162 00ba 42F21073 		movw	r3, #10000
+ 163 00be 2822     		movs	r2, #40
+ 164 00c0 0349     		ldr	r1, .L5
+ 165 00c2 0648     		ldr	r0, .L5+12
+ 166 00c4 FFF7FEFF 		bl	HAL_UART_Transmit
+ 167              	.L4:
+ 168              		.loc 1 38 0
+ 169 00c8 00BF     		nop
+ 170 00ca 1C37     		adds	r7, r7, #28
+ARM GAS  /tmp/cclnqMMG.s 			page 5
+
+
+ 171              	.LCFI3:
+ 172              		.cfi_def_cfa_offset 12
+ 173 00cc BD46     		mov	sp, r7
+ 174              	.LCFI4:
+ 175              		.cfi_def_cfa_register 13
+ 176              		@ sp needed
+ 177 00ce 90BD     		pop	{r4, r7, pc}
+ 178              	.L6:
+ 179              		.align	2
+ 180              	.L5:
+ 181 00d0 00000000 		.word	sendMSG
+ 182 00d4 00000000 		.word	.LC0
+ 183 00d8 1C000000 		.word	.LC1
+ 184 00dc 00000000 		.word	huart4
+ 185 00e0 28000000 		.word	.LC2
+ 186 00e4 00080048 		.word	1207961600
+ 187 00e8 44000000 		.word	.LC3
+ 188 00ec 60000000 		.word	.LC4
+ 189              		.cfi_endproc
+ 190              	.LFE126:
+ 192              		.comm	myTask2_EQ,80,8
+ 193              		.section	.text.myTask2,"ax",%progbits
+ 194              		.align	1
+ 195              		.global	myTask2
+ 196              		.syntax unified
+ 197              		.thumb
+ 198              		.thumb_func
+ 199              		.fpu fpv4-sp-d16
+ 201              	myTask2:
+ 202              	.LFB127:
+  39:Src/mytask.c  **** 
+  40:Src/mytask.c  **** SSTEvent myTask2_EQ[myTask2_EVQL];
+  41:Src/mytask.c  **** void myTask2(SSTEvent event , Semaphore *s, MailBox *mb, Queue *q){
+ 203              		.loc 1 41 0
+ 204              		.cfi_startproc
+ 205              		@ args = 12, pretend = 0, frame = 24
+ 206              		@ frame_needed = 1, uses_anonymous_args = 0
+ 207 0000 90B5     		push	{r4, r7, lr}
+ 208              	.LCFI5:
+ 209              		.cfi_def_cfa_offset 12
+ 210              		.cfi_offset 4, -12
+ 211              		.cfi_offset 7, -8
+ 212              		.cfi_offset 14, -4
+ 213 0002 87B0     		sub	sp, sp, #28
+ 214              	.LCFI6:
+ 215              		.cfi_def_cfa_offset 40
+ 216 0004 00AF     		add	r7, sp, #0
+ 217              	.LCFI7:
+ 218              		.cfi_def_cfa_register 7
+ 219 0006 3C46     		mov	r4, r7
+ 220 0008 84E80F00 		stm	r4, {r0, r1, r2, r3}
+  42:Src/mytask.c  **** 	uint8_t exec = do_sem_down(s,myTask2_ID);
+ 221              		.loc 1 42 0
+ 222 000c 4FF00B02 		mov	r2, #11
+ 223 0010 4FF00003 		mov	r3, #0
+ 224 0014 B86A     		ldr	r0, [r7, #40]
+ 225 0016 FFF7FEFF 		bl	do_sem_down
+ARM GAS  /tmp/cclnqMMG.s 			page 6
+
+
+ 226 001a 0346     		mov	r3, r0
+ 227 001c FB75     		strb	r3, [r7, #23]
+  43:Src/mytask.c  **** 
+  44:Src/mytask.c  **** memset(sendMSG, 0, 40);
+ 228              		.loc 1 44 0
+ 229 001e 2822     		movs	r2, #40
+ 230 0020 0021     		movs	r1, #0
+ 231 0022 2B48     		ldr	r0, .L11
+ 232 0024 FFF7FEFF 		bl	memset
+  45:Src/mytask.c  **** 	sprintf(sendMSG,"%s ID=%d \n\r",semMSG,myTask2_ID);
+ 233              		.loc 1 45 0
+ 234 0028 0B23     		movs	r3, #11
+ 235 002a 2A4A     		ldr	r2, .L11+4
+ 236 002c 2A49     		ldr	r1, .L11+8
+ 237 002e 2848     		ldr	r0, .L11
+ 238 0030 FFF7FEFF 		bl	sprintf
+  46:Src/mytask.c  **** 	HAL_UART_Transmit(&huart4, (uint8_t *)sendMSG, 40, 10000);
+ 239              		.loc 1 46 0
+ 240 0034 42F21073 		movw	r3, #10000
+ 241 0038 2822     		movs	r2, #40
+ 242 003a 2549     		ldr	r1, .L11
+ 243 003c 2748     		ldr	r0, .L11+12
+ 244 003e FFF7FEFF 		bl	HAL_UART_Transmit
+  47:Src/mytask.c  **** 	if(exec == OK){
+ 245              		.loc 1 47 0
+ 246 0042 FB7D     		ldrb	r3, [r7, #23]	@ zero_extendqisi2
+ 247 0044 022B     		cmp	r3, #2
+ 248 0046 2ED1     		bne	.L8
+  48:Src/mytask.c  **** 	memset(sendMSG, 0, 40);
+ 249              		.loc 1 48 0
+ 250 0048 2822     		movs	r2, #40
+ 251 004a 0021     		movs	r1, #0
+ 252 004c 2048     		ldr	r0, .L11
+ 253 004e FFF7FEFF 		bl	memset
+  49:Src/mytask.c  **** 		sprintf(sendMSG,"Semaphore Down => ID=%d \n\r",myTask2_ID);
+ 254              		.loc 1 49 0
+ 255 0052 0B22     		movs	r2, #11
+ 256 0054 2249     		ldr	r1, .L11+16
+ 257 0056 1E48     		ldr	r0, .L11
+ 258 0058 FFF7FEFF 		bl	sprintf
+  50:Src/mytask.c  **** 		HAL_UART_Transmit(&huart4, (uint8_t *)sendMSG, 40, 10000);
+ 259              		.loc 1 50 0
+ 260 005c 42F21073 		movw	r3, #10000
+ 261 0060 2822     		movs	r2, #40
+ 262 0062 1B49     		ldr	r1, .L11
+ 263 0064 1D48     		ldr	r0, .L11+12
+ 264 0066 FFF7FEFF 		bl	HAL_UART_Transmit
+  51:Src/mytask.c  **** 		
+  52:Src/mytask.c  **** 
+  53:Src/mytask.c  **** 
+  54:Src/mytask.c  **** 		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);
+ 265              		.loc 1 54 0
+ 266 006a 0122     		movs	r2, #1
+ 267 006c 8021     		movs	r1, #128
+ 268 006e 1D48     		ldr	r0, .L11+20
+ 269 0070 FFF7FEFF 		bl	HAL_GPIO_WritePin
+  55:Src/mytask.c  **** 		delayNaManha(1000);
+ARM GAS  /tmp/cclnqMMG.s 			page 7
+
+
+ 270              		.loc 1 55 0
+ 271 0074 4FF47A70 		mov	r0, #1000
+ 272 0078 FFF7FEFF 		bl	delayNaManha
+  56:Src/mytask.c  **** 		do_sem_up(s);
+ 273              		.loc 1 56 0
+ 274 007c B86A     		ldr	r0, [r7, #40]
+ 275 007e FFF7FEFF 		bl	do_sem_up
+  57:Src/mytask.c  **** 		memset(sendMSG, 0, 40);
+ 276              		.loc 1 57 0
+ 277 0082 2822     		movs	r2, #40
+ 278 0084 0021     		movs	r1, #0
+ 279 0086 1248     		ldr	r0, .L11
+ 280 0088 FFF7FEFF 		bl	memset
+  58:Src/mytask.c  **** 		sprintf(sendMSG,"Semaphore Up => ID=%d \n\r",myTask2_ID);
+ 281              		.loc 1 58 0
+ 282 008c 0B22     		movs	r2, #11
+ 283 008e 1649     		ldr	r1, .L11+24
+ 284 0090 0F48     		ldr	r0, .L11
+ 285 0092 FFF7FEFF 		bl	sprintf
+  59:Src/mytask.c  **** 		HAL_UART_Transmit(&huart4, (uint8_t *)sendMSG, 40, 10000);
+ 286              		.loc 1 59 0
+ 287 0096 42F21073 		movw	r3, #10000
+ 288 009a 2822     		movs	r2, #40
+ 289 009c 0C49     		ldr	r1, .L11
+ 290 009e 0F48     		ldr	r0, .L11+12
+ 291 00a0 FFF7FEFF 		bl	HAL_UART_Transmit
+  60:Src/mytask.c  **** 	}else{
+  61:Src/mytask.c  **** 		memset(sendMSG, 0, 40);
+  62:Src/mytask.c  **** 		sprintf(sendMSG,"Semaphore Busy => ID=%d \n\r",myTask2_ID);
+  63:Src/mytask.c  **** 		HAL_UART_Transmit(&huart4, (uint8_t *)sendMSG, 40, 10000);
+  64:Src/mytask.c  **** 	}
+  65:Src/mytask.c  **** }	
+ 292              		.loc 1 65 0
+ 293 00a4 10E0     		b	.L10
+ 294              	.L8:
+  61:Src/mytask.c  **** 		sprintf(sendMSG,"Semaphore Busy => ID=%d \n\r",myTask2_ID);
+ 295              		.loc 1 61 0
+ 296 00a6 2822     		movs	r2, #40
+ 297 00a8 0021     		movs	r1, #0
+ 298 00aa 0948     		ldr	r0, .L11
+ 299 00ac FFF7FEFF 		bl	memset
+  62:Src/mytask.c  **** 		HAL_UART_Transmit(&huart4, (uint8_t *)sendMSG, 40, 10000);
+ 300              		.loc 1 62 0
+ 301 00b0 0B22     		movs	r2, #11
+ 302 00b2 0E49     		ldr	r1, .L11+28
+ 303 00b4 0648     		ldr	r0, .L11
+ 304 00b6 FFF7FEFF 		bl	sprintf
+  63:Src/mytask.c  **** 	}
+ 305              		.loc 1 63 0
+ 306 00ba 42F21073 		movw	r3, #10000
+ 307 00be 2822     		movs	r2, #40
+ 308 00c0 0349     		ldr	r1, .L11
+ 309 00c2 0648     		ldr	r0, .L11+12
+ 310 00c4 FFF7FEFF 		bl	HAL_UART_Transmit
+ 311              	.L10:
+ 312              		.loc 1 65 0
+ 313 00c8 00BF     		nop
+ARM GAS  /tmp/cclnqMMG.s 			page 8
+
+
+ 314 00ca 1C37     		adds	r7, r7, #28
+ 315              	.LCFI8:
+ 316              		.cfi_def_cfa_offset 12
+ 317 00cc BD46     		mov	sp, r7
+ 318              	.LCFI9:
+ 319              		.cfi_def_cfa_register 13
+ 320              		@ sp needed
+ 321 00ce 90BD     		pop	{r4, r7, pc}
+ 322              	.L12:
+ 323              		.align	2
+ 324              	.L11:
+ 325 00d0 00000000 		.word	sendMSG
+ 326 00d4 00000000 		.word	.LC0
+ 327 00d8 1C000000 		.word	.LC1
+ 328 00dc 00000000 		.word	huart4
+ 329 00e0 28000000 		.word	.LC2
+ 330 00e4 00080048 		.word	1207961600
+ 331 00e8 44000000 		.word	.LC3
+ 332 00ec 60000000 		.word	.LC4
+ 333              		.cfi_endproc
+ 334              	.LFE127:
+ 336              		.comm	myTask3_EQ,96,8
+ 337              		.section	.rodata
+ 338 007b 00       		.align	2
+ 339              	.LC5:
+ 340 007c 74727969 		.ascii	"trying to use MailBox => \000"
+ 340      6E672074 
+ 340      6F207573 
+ 340      65204D61 
+ 340      696C426F 
+ 341 0096 0000     		.align	2
+ 342              	.LC6:
+ 343 0098 4D61696C 		.ascii	"MailBox Down => ID=%d \012\015\000"
+ 343      426F7820 
+ 343      446F776E 
+ 343      203D3E20 
+ 343      49443D25 
+ 344 00b1 000000   		.align	2
+ 345              	.LC7:
+ 346 00b4 4D61696C 		.ascii	"MailBox Up => ID=%d \012\015\000"
+ 346      426F7820 
+ 346      5570203D 
+ 346      3E204944 
+ 346      3D256420 
+ 347 00cb 00       		.align	2
+ 348              	.LC8:
+ 349 00cc 4D61696C 		.ascii	"MailBox Busy => ID=%d \012\015\000"
+ 349      426F7820 
+ 349      42757379 
+ 349      203D3E20 
+ 349      49443D25 
+ 350              		.section	.text.myTask3,"ax",%progbits
+ 351              		.align	1
+ 352              		.global	myTask3
+ 353              		.syntax unified
+ 354              		.thumb
+ 355              		.thumb_func
+ARM GAS  /tmp/cclnqMMG.s 			page 9
+
+
+ 356              		.fpu fpv4-sp-d16
+ 358              	myTask3:
+ 359              	.LFB128:
+  66:Src/mytask.c  **** 
+  67:Src/mytask.c  **** 
+  68:Src/mytask.c  **** SSTEvent myTask3_EQ[myTask3_EVQL];
+  69:Src/mytask.c  **** void myTask3(SSTEvent event, Semaphore *s, MailBox *mb, Queue *q){
+ 360              		.loc 1 69 0
+ 361              		.cfi_startproc
+ 362              		@ args = 12, pretend = 0, frame = 24
+ 363              		@ frame_needed = 1, uses_anonymous_args = 0
+ 364 0000 90B5     		push	{r4, r7, lr}
+ 365              	.LCFI10:
+ 366              		.cfi_def_cfa_offset 12
+ 367              		.cfi_offset 4, -12
+ 368              		.cfi_offset 7, -8
+ 369              		.cfi_offset 14, -4
+ 370 0002 87B0     		sub	sp, sp, #28
+ 371              	.LCFI11:
+ 372              		.cfi_def_cfa_offset 40
+ 373 0004 00AF     		add	r7, sp, #0
+ 374              	.LCFI12:
+ 375              		.cfi_def_cfa_register 7
+ 376 0006 3C46     		mov	r4, r7
+ 377 0008 84E80F00 		stm	r4, {r0, r1, r2, r3}
+  70:Src/mytask.c  **** 
+  71:Src/mytask.c  **** 	uint8_t exec = do_sem_down(&mb->s,myTask3_ID);
+ 378              		.loc 1 71 0
+ 379 000c F96A     		ldr	r1, [r7, #44]
+ 380 000e 4FF01502 		mov	r2, #21
+ 381 0012 4FF00003 		mov	r3, #0
+ 382 0016 0846     		mov	r0, r1
+ 383 0018 FFF7FEFF 		bl	do_sem_down
+ 384 001c 0346     		mov	r3, r0
+ 385 001e FB75     		strb	r3, [r7, #23]
+  72:Src/mytask.c  **** 
+  73:Src/mytask.c  **** 	memset(sendMSG, 0, 40);
+ 386              		.loc 1 73 0
+ 387 0020 2822     		movs	r2, #40
+ 388 0022 0021     		movs	r1, #0
+ 389 0024 2F48     		ldr	r0, .L17
+ 390 0026 FFF7FEFF 		bl	memset
+  74:Src/mytask.c  **** 	sprintf(sendMSG,"%s ID=%d \n\r",mbMSG,myTask3_ID);
+ 391              		.loc 1 74 0
+ 392 002a 1523     		movs	r3, #21
+ 393 002c 2E4A     		ldr	r2, .L17+4
+ 394 002e 2F49     		ldr	r1, .L17+8
+ 395 0030 2C48     		ldr	r0, .L17
+ 396 0032 FFF7FEFF 		bl	sprintf
+  75:Src/mytask.c  **** 	HAL_UART_Transmit(&huart4, (uint8_t *)sendMSG, 40, 10000);
+ 397              		.loc 1 75 0
+ 398 0036 42F21073 		movw	r3, #10000
+ 399 003a 2822     		movs	r2, #40
+ 400 003c 2949     		ldr	r1, .L17
+ 401 003e 2C48     		ldr	r0, .L17+12
+ 402 0040 FFF7FEFF 		bl	HAL_UART_Transmit
+  76:Src/mytask.c  **** 	if(exec == OK){
+ARM GAS  /tmp/cclnqMMG.s 			page 10
+
+
+ 403              		.loc 1 76 0
+ 404 0044 FB7D     		ldrb	r3, [r7, #23]	@ zero_extendqisi2
+ 405 0046 022B     		cmp	r3, #2
+ 406 0048 37D1     		bne	.L14
+ 407              	.LBB2:
+  77:Src/mytask.c  **** 		memset(sendMSG, 0, 40);
+ 408              		.loc 1 77 0
+ 409 004a 2822     		movs	r2, #40
+ 410 004c 0021     		movs	r1, #0
+ 411 004e 2548     		ldr	r0, .L17
+ 412 0050 FFF7FEFF 		bl	memset
+  78:Src/mytask.c  **** 		sprintf(sendMSG,"MailBox Down => ID=%d \n\r",myTask3_ID);
+ 413              		.loc 1 78 0
+ 414 0054 1522     		movs	r2, #21
+ 415 0056 2749     		ldr	r1, .L17+16
+ 416 0058 2248     		ldr	r0, .L17
+ 417 005a FFF7FEFF 		bl	sprintf
+  79:Src/mytask.c  **** 		HAL_UART_Transmit(&huart4, (uint8_t *)sendMSG, 40, 10000);
+ 418              		.loc 1 79 0
+ 419 005e 42F21073 		movw	r3, #10000
+ 420 0062 2822     		movs	r2, #40
+ 421 0064 1F49     		ldr	r1, .L17
+ 422 0066 2248     		ldr	r0, .L17+12
+ 423 0068 FFF7FEFF 		bl	HAL_UART_Transmit
+  80:Src/mytask.c  **** 
+  81:Src/mytask.c  **** 		char msg = 0x03;
+ 424              		.loc 1 81 0
+ 425 006c 0323     		movs	r3, #3
+ 426 006e BB75     		strb	r3, [r7, #22]
+  82:Src/mytask.c  **** 		put(mb,msg);
+ 427              		.loc 1 82 0
+ 428 0070 BB7D     		ldrb	r3, [r7, #22]	@ zero_extendqisi2
+ 429 0072 1946     		mov	r1, r3
+ 430 0074 F86A     		ldr	r0, [r7, #44]
+ 431 0076 FFF7FEFF 		bl	put
+  83:Src/mytask.c  **** 		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_RESET);
+ 432              		.loc 1 83 0
+ 433 007a 0022     		movs	r2, #0
+ 434 007c 4FF40071 		mov	r1, #512
+ 435 0080 1D48     		ldr	r0, .L17+20
+ 436 0082 FFF7FEFF 		bl	HAL_GPIO_WritePin
+  84:Src/mytask.c  **** 		delayNaManha(1000);
+ 437              		.loc 1 84 0
+ 438 0086 4FF47A70 		mov	r0, #1000
+ 439 008a FFF7FEFF 		bl	delayNaManha
+  85:Src/mytask.c  **** 
+  86:Src/mytask.c  **** 		do_sem_up(&mb->s);
+ 440              		.loc 1 86 0
+ 441 008e FB6A     		ldr	r3, [r7, #44]
+ 442 0090 1846     		mov	r0, r3
+ 443 0092 FFF7FEFF 		bl	do_sem_up
+  87:Src/mytask.c  **** 
+  88:Src/mytask.c  **** 		memset(sendMSG, 0, 40);
+ 444              		.loc 1 88 0
+ 445 0096 2822     		movs	r2, #40
+ 446 0098 0021     		movs	r1, #0
+ 447 009a 1248     		ldr	r0, .L17
+ARM GAS  /tmp/cclnqMMG.s 			page 11
+
+
+ 448 009c FFF7FEFF 		bl	memset
+  89:Src/mytask.c  **** 		sprintf(sendMSG,"MailBox Up => ID=%d \n\r",myTask3_ID);
+ 449              		.loc 1 89 0
+ 450 00a0 1522     		movs	r2, #21
+ 451 00a2 1649     		ldr	r1, .L17+24
+ 452 00a4 0F48     		ldr	r0, .L17
+ 453 00a6 FFF7FEFF 		bl	sprintf
+  90:Src/mytask.c  **** 		HAL_UART_Transmit(&huart4, (uint8_t *)sendMSG, 40, 10000);
+ 454              		.loc 1 90 0
+ 455 00aa 42F21073 		movw	r3, #10000
+ 456 00ae 2822     		movs	r2, #40
+ 457 00b0 0C49     		ldr	r1, .L17
+ 458 00b2 0F48     		ldr	r0, .L17+12
+ 459 00b4 FFF7FEFF 		bl	HAL_UART_Transmit
+ 460              	.LBE2:
+  91:Src/mytask.c  **** 	}else{
+  92:Src/mytask.c  **** 		memset(sendMSG, 0, 40);
+  93:Src/mytask.c  **** 		sprintf(sendMSG,"MailBox Busy => ID=%d \n\r",myTask3_ID);
+  94:Src/mytask.c  **** 		HAL_UART_Transmit(&huart4, (uint8_t *)sendMSG, 40, 10000);
+  95:Src/mytask.c  **** 
+  96:Src/mytask.c  **** 	}
+  97:Src/mytask.c  **** 
+  98:Src/mytask.c  **** }
+ 461              		.loc 1 98 0
+ 462 00b8 10E0     		b	.L16
+ 463              	.L14:
+  92:Src/mytask.c  **** 		sprintf(sendMSG,"MailBox Busy => ID=%d \n\r",myTask3_ID);
+ 464              		.loc 1 92 0
+ 465 00ba 2822     		movs	r2, #40
+ 466 00bc 0021     		movs	r1, #0
+ 467 00be 0948     		ldr	r0, .L17
+ 468 00c0 FFF7FEFF 		bl	memset
+  93:Src/mytask.c  **** 		HAL_UART_Transmit(&huart4, (uint8_t *)sendMSG, 40, 10000);
+ 469              		.loc 1 93 0
+ 470 00c4 1522     		movs	r2, #21
+ 471 00c6 0E49     		ldr	r1, .L17+28
+ 472 00c8 0648     		ldr	r0, .L17
+ 473 00ca FFF7FEFF 		bl	sprintf
+  94:Src/mytask.c  **** 
+ 474              		.loc 1 94 0
+ 475 00ce 42F21073 		movw	r3, #10000
+ 476 00d2 2822     		movs	r2, #40
+ 477 00d4 0349     		ldr	r1, .L17
+ 478 00d6 0648     		ldr	r0, .L17+12
+ 479 00d8 FFF7FEFF 		bl	HAL_UART_Transmit
+ 480              	.L16:
+ 481              		.loc 1 98 0
+ 482 00dc 00BF     		nop
+ 483 00de 1C37     		adds	r7, r7, #28
+ 484              	.LCFI13:
+ 485              		.cfi_def_cfa_offset 12
+ 486 00e0 BD46     		mov	sp, r7
+ 487              	.LCFI14:
+ 488              		.cfi_def_cfa_register 13
+ 489              		@ sp needed
+ 490 00e2 90BD     		pop	{r4, r7, pc}
+ 491              	.L18:
+ARM GAS  /tmp/cclnqMMG.s 			page 12
+
+
+ 492              		.align	2
+ 493              	.L17:
+ 494 00e4 00000000 		.word	sendMSG
+ 495 00e8 7C000000 		.word	.LC5
+ 496 00ec 1C000000 		.word	.LC1
+ 497 00f0 00000000 		.word	huart4
+ 498 00f4 98000000 		.word	.LC6
+ 499 00f8 00080048 		.word	1207961600
+ 500 00fc B4000000 		.word	.LC7
+ 501 0100 CC000000 		.word	.LC8
+ 502              		.cfi_endproc
+ 503              	.LFE128:
+ 505              		.comm	myTask4_EQ,112,8
+ 506              		.section	.text.myTask4,"ax",%progbits
+ 507              		.align	1
+ 508              		.global	myTask4
+ 509              		.syntax unified
+ 510              		.thumb
+ 511              		.thumb_func
+ 512              		.fpu fpv4-sp-d16
+ 514              	myTask4:
+ 515              	.LFB129:
+  99:Src/mytask.c  **** 
+ 100:Src/mytask.c  **** SSTEvent myTask4_EQ[myTask4_EVQL];
+ 101:Src/mytask.c  **** void myTask4(SSTEvent event, Semaphore *s, MailBox *mb, Queue *q){
+ 516              		.loc 1 101 0
+ 517              		.cfi_startproc
+ 518              		@ args = 12, pretend = 0, frame = 24
+ 519              		@ frame_needed = 1, uses_anonymous_args = 0
+ 520 0000 90B5     		push	{r4, r7, lr}
+ 521              	.LCFI15:
+ 522              		.cfi_def_cfa_offset 12
+ 523              		.cfi_offset 4, -12
+ 524              		.cfi_offset 7, -8
+ 525              		.cfi_offset 14, -4
+ 526 0002 87B0     		sub	sp, sp, #28
+ 527              	.LCFI16:
+ 528              		.cfi_def_cfa_offset 40
+ 529 0004 00AF     		add	r7, sp, #0
+ 530              	.LCFI17:
+ 531              		.cfi_def_cfa_register 7
+ 532 0006 3C46     		mov	r4, r7
+ 533 0008 84E80F00 		stm	r4, {r0, r1, r2, r3}
+ 102:Src/mytask.c  **** 	uint8_t exec = do_sem_down(&mb->s,myTask4_ID);
+ 534              		.loc 1 102 0
+ 535 000c F96A     		ldr	r1, [r7, #44]
+ 536 000e 4FF01F02 		mov	r2, #31
+ 537 0012 4FF00003 		mov	r3, #0
+ 538 0016 0846     		mov	r0, r1
+ 539 0018 FFF7FEFF 		bl	do_sem_down
+ 540 001c 0346     		mov	r3, r0
+ 541 001e FB75     		strb	r3, [r7, #23]
+ 103:Src/mytask.c  **** 	if(exec == OK){
+ 542              		.loc 1 103 0
+ 543 0020 FB7D     		ldrb	r3, [r7, #23]	@ zero_extendqisi2
+ 544 0022 022B     		cmp	r3, #2
+ 545 0024 11D1     		bne	.L22
+ARM GAS  /tmp/cclnqMMG.s 			page 13
+
+
+ 546              	.LBB3:
+ 104:Src/mytask.c  **** 		char msg = get(mb);
+ 547              		.loc 1 104 0
+ 548 0026 F86A     		ldr	r0, [r7, #44]
+ 549 0028 FFF7FEFF 		bl	get
+ 550 002c 0346     		mov	r3, r0
+ 551 002e BB75     		strb	r3, [r7, #22]
+ 105:Src/mytask.c  **** 		if(msg == 0x03)
+ 552              		.loc 1 105 0
+ 553 0030 BB7D     		ldrb	r3, [r7, #22]	@ zero_extendqisi2
+ 554 0032 032B     		cmp	r3, #3
+ 555 0034 05D1     		bne	.L21
+ 106:Src/mytask.c  **** 			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_9, GPIO_PIN_SET);
+ 556              		.loc 1 106 0
+ 557 0036 0122     		movs	r2, #1
+ 558 0038 4FF40071 		mov	r1, #512
+ 559 003c 0548     		ldr	r0, .L23
+ 560 003e FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 561              	.L21:
+ 107:Src/mytask.c  **** 		do_sem_up(&mb->s);
+ 562              		.loc 1 107 0
+ 563 0042 FB6A     		ldr	r3, [r7, #44]
+ 564 0044 1846     		mov	r0, r3
+ 565 0046 FFF7FEFF 		bl	do_sem_up
+ 566              	.L22:
+ 567              	.LBE3:
+ 108:Src/mytask.c  **** 	}
+ 109:Src/mytask.c  **** 
+ 110:Src/mytask.c  **** }
+ 568              		.loc 1 110 0
+ 569 004a 00BF     		nop
+ 570 004c 1C37     		adds	r7, r7, #28
+ 571              	.LCFI18:
+ 572              		.cfi_def_cfa_offset 12
+ 573 004e BD46     		mov	sp, r7
+ 574              	.LCFI19:
+ 575              		.cfi_def_cfa_register 13
+ 576              		@ sp needed
+ 577 0050 90BD     		pop	{r4, r7, pc}
+ 578              	.L24:
+ 579 0052 00BF     		.align	2
+ 580              	.L23:
+ 581 0054 00080048 		.word	1207961600
+ 582              		.cfi_endproc
+ 583              	.LFE129:
+ 585              		.comm	myTask5_EQ,128,8
+ 586              		.section	.text.myTask5,"ax",%progbits
+ 587              		.align	1
+ 588              		.global	myTask5
+ 589              		.syntax unified
+ 590              		.thumb
+ 591              		.thumb_func
+ 592              		.fpu fpv4-sp-d16
+ 594              	myTask5:
+ 595              	.LFB130:
+ 111:Src/mytask.c  **** 
+ 112:Src/mytask.c  **** 
+ARM GAS  /tmp/cclnqMMG.s 			page 14
+
+
+ 113:Src/mytask.c  **** SSTEvent myTask5_EQ[myTask5_EVQL];
+ 114:Src/mytask.c  **** void myTask5(SSTEvent event, Semaphore *s, MailBox *mb, Queue *q){
+ 596              		.loc 1 114 0
+ 597              		.cfi_startproc
+ 598              		@ args = 12, pretend = 0, frame = 32
+ 599              		@ frame_needed = 1, uses_anonymous_args = 0
+ 600 0000 90B5     		push	{r4, r7, lr}
+ 601              	.LCFI20:
+ 602              		.cfi_def_cfa_offset 12
+ 603              		.cfi_offset 4, -12
+ 604              		.cfi_offset 7, -8
+ 605              		.cfi_offset 14, -4
+ 606 0002 89B0     		sub	sp, sp, #36
+ 607              	.LCFI21:
+ 608              		.cfi_def_cfa_offset 48
+ 609 0004 00AF     		add	r7, sp, #0
+ 610              	.LCFI22:
+ 611              		.cfi_def_cfa_register 7
+ 612 0006 3C46     		mov	r4, r7
+ 613 0008 84E80F00 		stm	r4, {r0, r1, r2, r3}
+ 115:Src/mytask.c  **** 
+ 116:Src/mytask.c  **** 	uint8_t exec = do_sem_down(&q->s,myTask5_ID);
+ 614              		.loc 1 116 0
+ 615 000c B96B     		ldr	r1, [r7, #56]
+ 616 000e 4FF02902 		mov	r2, #41
+ 617 0012 4FF00003 		mov	r3, #0
+ 618 0016 0846     		mov	r0, r1
+ 619 0018 FFF7FEFF 		bl	do_sem_down
+ 620 001c 0346     		mov	r3, r0
+ 621 001e FB77     		strb	r3, [r7, #31]
+ 117:Src/mytask.c  **** 
+ 118:Src/mytask.c  **** 	if(exec == OK){
+ 622              		.loc 1 118 0
+ 623 0020 FB7F     		ldrb	r3, [r7, #31]	@ zero_extendqisi2
+ 624 0022 022B     		cmp	r3, #2
+ 625 0024 14D1     		bne	.L27
+ 626              	.LBB4:
+ 119:Src/mytask.c  **** 		char msg = 0x01;
+ 627              		.loc 1 119 0
+ 628 0026 0123     		movs	r3, #1
+ 629 0028 BB77     		strb	r3, [r7, #30]
+ 120:Src/mytask.c  **** 		NODE item;
+ 121:Src/mytask.c  **** 		item.data  = msg;
+ 630              		.loc 1 121 0
+ 631 002a BB7F     		ldrb	r3, [r7, #30]
+ 632 002c 3B75     		strb	r3, [r7, #20]
+ 122:Src/mytask.c  **** 		item.prev = NULL;
+ 633              		.loc 1 122 0
+ 634 002e 0023     		movs	r3, #0
+ 635 0030 BB61     		str	r3, [r7, #24]
+ 123:Src/mytask.c  **** 		Enqueue(q,&item);
+ 636              		.loc 1 123 0
+ 637 0032 07F11403 		add	r3, r7, #20
+ 638 0036 1946     		mov	r1, r3
+ 639 0038 B86B     		ldr	r0, [r7, #56]
+ 640 003a FFF7FEFF 		bl	Enqueue
+ 124:Src/mytask.c  **** 		HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_RESET);
+ARM GAS  /tmp/cclnqMMG.s 			page 15
+
+
+ 641              		.loc 1 124 0
+ 642 003e 0022     		movs	r2, #0
+ 643 0040 4021     		movs	r1, #64
+ 644 0042 0548     		ldr	r0, .L28
+ 645 0044 FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 125:Src/mytask.c  **** 		do_sem_up(&q->s);
+ 646              		.loc 1 125 0
+ 647 0048 BB6B     		ldr	r3, [r7, #56]
+ 648 004a 1846     		mov	r0, r3
+ 649 004c FFF7FEFF 		bl	do_sem_up
+ 650              	.L27:
+ 651              	.LBE4:
+ 126:Src/mytask.c  **** 	}
+ 127:Src/mytask.c  **** 
+ 128:Src/mytask.c  **** }
+ 652              		.loc 1 128 0
+ 653 0050 00BF     		nop
+ 654 0052 2437     		adds	r7, r7, #36
+ 655              	.LCFI23:
+ 656              		.cfi_def_cfa_offset 12
+ 657 0054 BD46     		mov	sp, r7
+ 658              	.LCFI24:
+ 659              		.cfi_def_cfa_register 13
+ 660              		@ sp needed
+ 661 0056 90BD     		pop	{r4, r7, pc}
+ 662              	.L29:
+ 663              		.align	2
+ 664              	.L28:
+ 665 0058 00080048 		.word	1207961600
+ 666              		.cfi_endproc
+ 667              	.LFE130:
+ 669              		.comm	myTask6_EQ,144,8
+ 670              		.section	.text.myTask6,"ax",%progbits
+ 671              		.align	1
+ 672              		.global	myTask6
+ 673              		.syntax unified
+ 674              		.thumb
+ 675              		.thumb_func
+ 676              		.fpu fpv4-sp-d16
+ 678              	myTask6:
+ 679              	.LFB131:
+ 129:Src/mytask.c  **** 
+ 130:Src/mytask.c  **** SSTEvent myTask6_EQ[myTask6_EVQL];
+ 131:Src/mytask.c  **** void myTask6(SSTEvent event, Semaphore *s, MailBox *mb, Queue *q){
+ 680              		.loc 1 131 0
+ 681              		.cfi_startproc
+ 682              		@ args = 12, pretend = 0, frame = 24
+ 683              		@ frame_needed = 1, uses_anonymous_args = 0
+ 684 0000 90B5     		push	{r4, r7, lr}
+ 685              	.LCFI25:
+ 686              		.cfi_def_cfa_offset 12
+ 687              		.cfi_offset 4, -12
+ 688              		.cfi_offset 7, -8
+ 689              		.cfi_offset 14, -4
+ 690 0002 87B0     		sub	sp, sp, #28
+ 691              	.LCFI26:
+ 692              		.cfi_def_cfa_offset 40
+ARM GAS  /tmp/cclnqMMG.s 			page 16
+
+
+ 693 0004 00AF     		add	r7, sp, #0
+ 694              	.LCFI27:
+ 695              		.cfi_def_cfa_register 7
+ 696 0006 3C46     		mov	r4, r7
+ 697 0008 84E80F00 		stm	r4, {r0, r1, r2, r3}
+ 132:Src/mytask.c  **** 	uint8_t exec = do_sem_down(&q->s,myTask6_ID);
+ 698              		.loc 1 132 0
+ 699 000c 396B     		ldr	r1, [r7, #48]
+ 700 000e 4FF03302 		mov	r2, #51
+ 701 0012 4FF00003 		mov	r3, #0
+ 702 0016 0846     		mov	r0, r1
+ 703 0018 FFF7FEFF 		bl	do_sem_down
+ 704 001c 0346     		mov	r3, r0
+ 705 001e FB75     		strb	r3, [r7, #23]
+ 133:Src/mytask.c  **** 	if(exec == OK){
+ 706              		.loc 1 133 0
+ 707 0020 FB7D     		ldrb	r3, [r7, #23]	@ zero_extendqisi2
+ 708 0022 022B     		cmp	r3, #2
+ 709 0024 10D1     		bne	.L33
+ 710              	.LBB5:
+ 134:Src/mytask.c  **** 		NODE *item = Dequeue(q);
+ 711              		.loc 1 134 0
+ 712 0026 386B     		ldr	r0, [r7, #48]
+ 713 0028 FFF7FEFF 		bl	Dequeue
+ 714 002c 3861     		str	r0, [r7, #16]
+ 135:Src/mytask.c  **** 		if(item->data == 0x01)
+ 715              		.loc 1 135 0
+ 716 002e 3B69     		ldr	r3, [r7, #16]
+ 717 0030 1B78     		ldrb	r3, [r3]	@ zero_extendqisi2
+ 718 0032 012B     		cmp	r3, #1
+ 719 0034 04D1     		bne	.L32
+ 136:Src/mytask.c  **** 			HAL_GPIO_WritePin(GPIOC, GPIO_PIN_6, GPIO_PIN_SET);
+ 720              		.loc 1 136 0
+ 721 0036 0122     		movs	r2, #1
+ 722 0038 4021     		movs	r1, #64
+ 723 003a 0548     		ldr	r0, .L34
+ 724 003c FFF7FEFF 		bl	HAL_GPIO_WritePin
+ 725              	.L32:
+ 137:Src/mytask.c  **** 		do_sem_up(&q->s);
+ 726              		.loc 1 137 0
+ 727 0040 3B6B     		ldr	r3, [r7, #48]
+ 728 0042 1846     		mov	r0, r3
+ 729 0044 FFF7FEFF 		bl	do_sem_up
+ 730              	.L33:
+ 731              	.LBE5:
+ 138:Src/mytask.c  **** 	}
+ 139:Src/mytask.c  **** 
+ 140:Src/mytask.c  **** }
+ 732              		.loc 1 140 0
+ 733 0048 00BF     		nop
+ 734 004a 1C37     		adds	r7, r7, #28
+ 735              	.LCFI28:
+ 736              		.cfi_def_cfa_offset 12
+ 737 004c BD46     		mov	sp, r7
+ 738              	.LCFI29:
+ 739              		.cfi_def_cfa_register 13
+ 740              		@ sp needed
+ARM GAS  /tmp/cclnqMMG.s 			page 17
+
+
+ 741 004e 90BD     		pop	{r4, r7, pc}
+ 742              	.L35:
+ 743              		.align	2
+ 744              	.L34:
+ 745 0050 00080048 		.word	1207961600
+ 746              		.cfi_endproc
+ 747              	.LFE131:
+ 749              		.section	.text.delayNaManha,"ax",%progbits
+ 750              		.align	1
+ 751              		.global	delayNaManha
+ 752              		.syntax unified
+ 753              		.thumb
+ 754              		.thumb_func
+ 755              		.fpu fpv4-sp-d16
+ 757              	delayNaManha:
+ 758              	.LFB132:
+ 141:Src/mytask.c  **** 
+ 142:Src/mytask.c  **** //HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_RESET);
+ 143:Src/mytask.c  **** //HAL_GPIO_WritePin(GPIOC, GPIO_PIN_7, GPIO_PIN_SET);
+ 144:Src/mytask.c  **** //
+ 145:Src/mytask.c  **** 
+ 146:Src/mytask.c  **** void delayNaManha(int delay){
+ 759              		.loc 1 146 0
+ 760              		.cfi_startproc
+ 761              		@ args = 0, pretend = 0, frame = 16
+ 762              		@ frame_needed = 1, uses_anonymous_args = 0
+ 763              		@ link register save eliminated.
+ 764 0000 80B4     		push	{r7}
+ 765              	.LCFI30:
+ 766              		.cfi_def_cfa_offset 4
+ 767              		.cfi_offset 7, -4
+ 768 0002 85B0     		sub	sp, sp, #20
+ 769              	.LCFI31:
+ 770              		.cfi_def_cfa_offset 24
+ 771 0004 00AF     		add	r7, sp, #0
+ 772              	.LCFI32:
+ 773              		.cfi_def_cfa_register 7
+ 774 0006 7860     		str	r0, [r7, #4]
+ 147:Src/mytask.c  **** 	int i =0;
+ 775              		.loc 1 147 0
+ 776 0008 0023     		movs	r3, #0
+ 777 000a FB60     		str	r3, [r7, #12]
+ 148:Src/mytask.c  **** 	for(i=0; i<delay*1000;i++);
+ 778              		.loc 1 148 0
+ 779 000c 0023     		movs	r3, #0
+ 780 000e FB60     		str	r3, [r7, #12]
+ 781 0010 02E0     		b	.L37
+ 782              	.L38:
+ 783              		.loc 1 148 0 is_stmt 0 discriminator 3
+ 784 0012 FB68     		ldr	r3, [r7, #12]
+ 785 0014 0133     		adds	r3, r3, #1
+ 786 0016 FB60     		str	r3, [r7, #12]
+ 787              	.L37:
+ 788              		.loc 1 148 0 discriminator 1
+ 789 0018 7B68     		ldr	r3, [r7, #4]
+ 790 001a 4FF47A72 		mov	r2, #1000
+ 791 001e 02FB03F2 		mul	r2, r2, r3
+ARM GAS  /tmp/cclnqMMG.s 			page 18
+
+
+ 792 0022 FB68     		ldr	r3, [r7, #12]
+ 793 0024 9A42     		cmp	r2, r3
+ 794 0026 F4DC     		bgt	.L38
+ 149:Src/mytask.c  **** }...
+ 795              		.loc 1 149 0 is_stmt 1
+ 796 0028 00BF     		nop
+ 797 002a 1437     		adds	r7, r7, #20
+ 798              	.LCFI33:
+ 799              		.cfi_def_cfa_offset 4
+ 800 002c BD46     		mov	sp, r7
+ 801              	.LCFI34:
+ 802              		.cfi_def_cfa_register 13
+ 803              		@ sp needed
+ 804 002e 5DF8047B 		ldr	r7, [sp], #4
+ 805              	.LCFI35:
+ 806              		.cfi_restore 7
+ 807              		.cfi_def_cfa_offset 0
+ 808 0032 7047     		bx	lr
+ 809              		.cfi_endproc
+ 810              	.LFE132:
+ 812              		.text
+ 813              	.Letext0:
+ 814              		.file 2 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 815              		.file 3 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 816              		.file 4 "/usr/arm-none-eabi/include/sys/lock.h"
+ 817              		.file 5 "/usr/arm-none-eabi/include/sys/_types.h"
+ 818              		.file 6 "/usr/lib/gcc/arm-none-eabi/6.2.0/include/stddef.h"
+ 819              		.file 7 "/usr/arm-none-eabi/include/sys/reent.h"
+ 820              		.file 8 "Inc/uintx.h"
+ 821              		.file 9 "Inc/semaphore.h"
+ 822              		.file 10 "Inc/mailbox.h"
+ 823              		.file 11 "Inc/queue.h"
+ 824              		.file 12 "Inc/sst.h"
+ 825              		.file 13 "Inc/mytask.h"
+ 826              		.file 14 "Drivers/CMSIS/Include/core_cm4.h"
+ 827              		.file 15 "Drivers/CMSIS/Device/ST/STM32L4xx/Include/system_stm32l4xx.h"
+ 828              		.file 16 "Drivers/CMSIS/Device/ST/STM32L4xx/Include/stm32l476xx.h"
+ 829              		.file 17 "Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_def.h"
+ 830              		.file 18 "Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_gpio.h"
+ 831              		.file 19 "Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_dma.h"
+ 832              		.file 20 "Drivers/STM32L4xx_HAL_Driver/Inc/stm32l4xx_hal_uart.h"
+ 833              		.file 21 "Inc/usart.h"
+ 834              		.file 22 "<built-in>"
+ARM GAS  /tmp/cclnqMMG.s 			page 19
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 mytask.c
+     /tmp/cclnqMMG.s:22     .bss.sendMSG:0000000000000000 sendMSG
+     /tmp/cclnqMMG.s:19     .bss.sendMSG:0000000000000000 $d
+                            *COM*:0000000000000040 myTask_EQ
+     /tmp/cclnqMMG.s:30     .data.mytask_counter:0000000000000000 mytask_counter
+     /tmp/cclnqMMG.s:27     .data.mytask_counter:0000000000000000 $d
+     /tmp/cclnqMMG.s:33     .rodata:0000000000000000 $d
+     /tmp/cclnqMMG.s:49     .text.myTask:0000000000000000 $t
+     /tmp/cclnqMMG.s:56     .text.myTask:0000000000000000 myTask
+     /tmp/cclnqMMG.s:757    .text.delayNaManha:0000000000000000 delayNaManha
+     /tmp/cclnqMMG.s:181    .text.myTask:00000000000000d0 $d
+                            *COM*:0000000000000050 myTask2_EQ
+     /tmp/cclnqMMG.s:194    .text.myTask2:0000000000000000 $t
+     /tmp/cclnqMMG.s:201    .text.myTask2:0000000000000000 myTask2
+     /tmp/cclnqMMG.s:325    .text.myTask2:00000000000000d0 $d
+                            *COM*:0000000000000060 myTask3_EQ
+     /tmp/cclnqMMG.s:351    .text.myTask3:0000000000000000 $t
+     /tmp/cclnqMMG.s:358    .text.myTask3:0000000000000000 myTask3
+     /tmp/cclnqMMG.s:494    .text.myTask3:00000000000000e4 $d
+                            *COM*:0000000000000070 myTask4_EQ
+     /tmp/cclnqMMG.s:507    .text.myTask4:0000000000000000 $t
+     /tmp/cclnqMMG.s:514    .text.myTask4:0000000000000000 myTask4
+     /tmp/cclnqMMG.s:581    .text.myTask4:0000000000000054 $d
+                            *COM*:0000000000000080 myTask5_EQ
+     /tmp/cclnqMMG.s:587    .text.myTask5:0000000000000000 $t
+     /tmp/cclnqMMG.s:594    .text.myTask5:0000000000000000 myTask5
+     /tmp/cclnqMMG.s:665    .text.myTask5:0000000000000058 $d
+                            *COM*:0000000000000090 myTask6_EQ
+     /tmp/cclnqMMG.s:671    .text.myTask6:0000000000000000 $t
+     /tmp/cclnqMMG.s:678    .text.myTask6:0000000000000000 myTask6
+     /tmp/cclnqMMG.s:745    .text.myTask6:0000000000000050 $d
+     /tmp/cclnqMMG.s:750    .text.delayNaManha:0000000000000000 $t
+                     .debug_frame:0000000000000010 $d
+
+UNDEFINED SYMBOLS
+do_sem_down
+memset
+sprintf
+HAL_UART_Transmit
+HAL_GPIO_WritePin
+do_sem_up
+huart4
+put
+get
+Enqueue
+Dequeue

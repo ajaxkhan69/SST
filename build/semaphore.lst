@@ -1,0 +1,477 @@
+ARM GAS  /tmp/ccgsBq9g.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 6
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"semaphore.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.text.ConstructSemaphore,"ax",%progbits
+  18              		.align	1
+  19              		.global	ConstructSemaphore
+  20              		.syntax unified
+  21              		.thumb
+  22              		.thumb_func
+  23              		.fpu fpv4-sp-d16
+  25              	ConstructSemaphore:
+  26              	.LFB124:
+  27              		.file 1 "Src/semaphore.c"
+   1:Src/semaphore.c **** /*
+   2:Src/semaphore.c ****  * semaphore.c
+   3:Src/semaphore.c ****  *
+   4:Src/semaphore.c ****  *  Created on: Nov 17, 2016
+   5:Src/semaphore.c ****  *      Author: tarciso
+   6:Src/semaphore.c ****  */
+   7:Src/semaphore.c **** 
+   8:Src/semaphore.c **** 
+   9:Src/semaphore.c **** #include "semaphore.h"
+  10:Src/semaphore.c **** #include "stdlib.h"
+  11:Src/semaphore.c **** #include "sst_port.h"
+  12:Src/semaphore.c **** #include "stddef.h"
+  13:Src/semaphore.c **** 
+  14:Src/semaphore.c **** Semaphore ConstructSemaphore(int c){
+  28              		.loc 1 14 0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 24
+  31              		@ frame_needed = 1, uses_anonymous_args = 0
+  32              		@ link register save eliminated.
+  33 0000 90B4     		push	{r4, r7}
+  34              	.LCFI0:
+  35              		.cfi_def_cfa_offset 8
+  36              		.cfi_offset 4, -8
+  37              		.cfi_offset 7, -4
+  38 0002 86B0     		sub	sp, sp, #24
+  39              	.LCFI1:
+  40              		.cfi_def_cfa_offset 32
+  41 0004 00AF     		add	r7, sp, #0
+  42              	.LCFI2:
+  43              		.cfi_def_cfa_register 7
+  44 0006 7860     		str	r0, [r7, #4]
+ARM GAS  /tmp/ccgsBq9g.s 			page 2
+
+
+  45 0008 3960     		str	r1, [r7]
+  15:Src/semaphore.c **** 	Semaphore sem = {sem.counter = c , sem.waitList = 0};
+  46              		.loc 1 15 0
+  47 000a 3B68     		ldr	r3, [r7]
+  48 000c 5BB2     		sxtb	r3, r3
+  49 000e 3B72     		strb	r3, [r7, #8]
+  50 0010 97F90830 		ldrsb	r3, [r7, #8]
+  51 0014 3B72     		strb	r3, [r7, #8]
+  52 0016 4FF00003 		mov	r3, #0
+  53 001a 4FF00004 		mov	r4, #0
+  54 001e C7E90434 		strd	r3, [r7, #16]
+  55 0022 D7E90434 		ldrd	r3, [r7, #16]
+  56 0026 C7E90434 		strd	r3, [r7, #16]
+  16:Src/semaphore.c **** 	return sem;
+  57              		.loc 1 16 0
+  58 002a 7B68     		ldr	r3, [r7, #4]
+  59 002c 1C46     		mov	r4, r3
+  60 002e 07F10803 		add	r3, r7, #8
+  61 0032 0FCB     		ldm	r3, {r0, r1, r2, r3}
+  62 0034 84E80F00 		stm	r4, {r0, r1, r2, r3}
+  17:Src/semaphore.c **** }
+  63              		.loc 1 17 0
+  64 0038 7868     		ldr	r0, [r7, #4]
+  65 003a 1837     		adds	r7, r7, #24
+  66              	.LCFI3:
+  67              		.cfi_def_cfa_offset 8
+  68 003c BD46     		mov	sp, r7
+  69              	.LCFI4:
+  70              		.cfi_def_cfa_register 13
+  71              		@ sp needed
+  72 003e 90BC     		pop	{r4, r7}
+  73              	.LCFI5:
+  74              		.cfi_restore 7
+  75              		.cfi_restore 4
+  76              		.cfi_def_cfa_offset 0
+  77 0040 7047     		bx	lr
+  78              		.cfi_endproc
+  79              	.LFE124:
+  81              		.section	.text.do_sem_down,"ax",%progbits
+  82              		.align	1
+  83              		.global	do_sem_down
+  84              		.syntax unified
+  85              		.thumb
+  86              		.thumb_func
+  87              		.fpu fpv4-sp-d16
+  89              	do_sem_down:
+  90              	.LFB125:
+  18:Src/semaphore.c **** 
+  19:Src/semaphore.c **** uint8_t do_sem_down(Semaphore *sem, uintX_t prior){
+  91              		.loc 1 19 0
+  92              		.cfi_startproc
+  93              		@ args = 0, pretend = 0, frame = 16
+  94              		@ frame_needed = 1, uses_anonymous_args = 0
+  95              		@ link register save eliminated.
+  96 0000 90B4     		push	{r4, r7}
+  97              	.LCFI6:
+  98              		.cfi_def_cfa_offset 8
+ARM GAS  /tmp/ccgsBq9g.s 			page 3
+
+
+  99              		.cfi_offset 4, -8
+ 100              		.cfi_offset 7, -4
+ 101 0002 84B0     		sub	sp, sp, #16
+ 102              	.LCFI7:
+ 103              		.cfi_def_cfa_offset 24
+ 104 0004 00AF     		add	r7, sp, #0
+ 105              	.LCFI8:
+ 106              		.cfi_def_cfa_register 7
+ 107 0006 F860     		str	r0, [r7, #12]
+ 108 0008 C7E90023 		strd	r2, [r7]
+  20:Src/semaphore.c **** 
+  21:Src/semaphore.c **** 	if(!sem){
+ 109              		.loc 1 21 0
+ 110 000c FB68     		ldr	r3, [r7, #12]
+ 111 000e 002B     		cmp	r3, #0
+ 112 0010 01D1     		bne	.L4
+  22:Src/semaphore.c **** 		return NULL_ERROR;
+ 113              		.loc 1 22 0
+ 114 0012 0023     		movs	r3, #0
+ 115 0014 1CE0     		b	.L5
+ 116              	.L4:
+  23:Src/semaphore.c **** 	}
+  24:Src/semaphore.c **** 
+  25:Src/semaphore.c **** 
+  26:Src/semaphore.c **** 	sem->counter--;
+ 117              		.loc 1 26 0
+ 118 0016 FB68     		ldr	r3, [r7, #12]
+ 119 0018 93F90030 		ldrsb	r3, [r3]
+ 120 001c DBB2     		uxtb	r3, r3
+ 121 001e 013B     		subs	r3, r3, #1
+ 122 0020 DBB2     		uxtb	r3, r3
+ 123 0022 5AB2     		sxtb	r2, r3
+ 124 0024 FB68     		ldr	r3, [r7, #12]
+ 125 0026 1A70     		strb	r2, [r3]
+  27:Src/semaphore.c **** 	if(sem->counter < 0){
+ 126              		.loc 1 27 0
+ 127 0028 FB68     		ldr	r3, [r7, #12]
+ 128 002a 93F90030 		ldrsb	r3, [r3]
+ 129 002e 002B     		cmp	r3, #0
+ 130 0030 0DDA     		bge	.L6
+  28:Src/semaphore.c **** 		sem->waitList |= prior;
+ 131              		.loc 1 28 0
+ 132 0032 FB68     		ldr	r3, [r7, #12]
+ 133 0034 D3E90212 		ldrd	r1, [r3, #8]
+ 134 0038 D7E90034 		ldrd	r3, [r7]
+ 135 003c 43EA0103 		orr	r3, r3, r1
+ 136 0040 44EA0204 		orr	r4, r4, r2
+ 137 0044 FA68     		ldr	r2, [r7, #12]
+ 138 0046 C2E90234 		strd	r3, [r2, #8]
+  29:Src/semaphore.c **** 		return BUSY;
+ 139              		.loc 1 29 0
+ 140 004a 0123     		movs	r3, #1
+ 141 004c 00E0     		b	.L5
+ 142              	.L6:
+  30:Src/semaphore.c **** 	}
+  31:Src/semaphore.c **** 
+  32:Src/semaphore.c **** 	return OK;
+ARM GAS  /tmp/ccgsBq9g.s 			page 4
+
+
+ 143              		.loc 1 32 0
+ 144 004e 0223     		movs	r3, #2
+ 145              	.L5:
+  33:Src/semaphore.c **** }
+ 146              		.loc 1 33 0
+ 147 0050 1846     		mov	r0, r3
+ 148 0052 1037     		adds	r7, r7, #16
+ 149              	.LCFI9:
+ 150              		.cfi_def_cfa_offset 8
+ 151 0054 BD46     		mov	sp, r7
+ 152              	.LCFI10:
+ 153              		.cfi_def_cfa_register 13
+ 154              		@ sp needed
+ 155 0056 90BC     		pop	{r4, r7}
+ 156              	.LCFI11:
+ 157              		.cfi_restore 7
+ 158              		.cfi_restore 4
+ 159              		.cfi_def_cfa_offset 0
+ 160 0058 7047     		bx	lr
+ 161              		.cfi_endproc
+ 162              	.LFE125:
+ 164              		.global	__aeabi_ul2d
+ 165              		.global	__aeabi_ddiv
+ 166              		.global	__aeabi_d2ulz
+ 167              		.section	.text.do_sem_up,"ax",%progbits
+ 168              		.align	1
+ 169              		.global	do_sem_up
+ 170              		.syntax unified
+ 171              		.thumb
+ 172              		.thumb_func
+ 173              		.fpu fpv4-sp-d16
+ 175              	do_sem_up:
+ 176              	.LFB126:
+  34:Src/semaphore.c **** 
+  35:Src/semaphore.c **** uint8_t do_sem_up(Semaphore *sem){
+ 177              		.loc 1 35 0
+ 178              		.cfi_startproc
+ 179              		@ args = 0, pretend = 0, frame = 32
+ 180              		@ frame_needed = 1, uses_anonymous_args = 0
+ 181 0000 90B5     		push	{r4, r7, lr}
+ 182              	.LCFI12:
+ 183              		.cfi_def_cfa_offset 12
+ 184              		.cfi_offset 4, -12
+ 185              		.cfi_offset 7, -8
+ 186              		.cfi_offset 14, -4
+ 187 0002 8BB0     		sub	sp, sp, #44
+ 188              	.LCFI13:
+ 189              		.cfi_def_cfa_offset 56
+ 190 0004 02AF     		add	r7, sp, #8
+ 191              	.LCFI14:
+ 192              		.cfi_def_cfa 7, 48
+ 193 0006 7860     		str	r0, [r7, #4]
+  36:Src/semaphore.c **** 	sem->counter++;
+ 194              		.loc 1 36 0
+ 195 0008 7B68     		ldr	r3, [r7, #4]
+ 196 000a 93F90030 		ldrsb	r3, [r3]
+ 197 000e DBB2     		uxtb	r3, r3
+ARM GAS  /tmp/ccgsBq9g.s 			page 5
+
+
+ 198 0010 0133     		adds	r3, r3, #1
+ 199 0012 DBB2     		uxtb	r3, r3
+ 200 0014 5AB2     		sxtb	r2, r3
+ 201 0016 7B68     		ldr	r3, [r7, #4]
+ 202 0018 1A70     		strb	r2, [r3]
+  37:Src/semaphore.c **** 	if(sem->counter <= 0){
+ 203              		.loc 1 37 0
+ 204 001a 7B68     		ldr	r3, [r7, #4]
+ 205 001c 93F90030 		ldrsb	r3, [r3]
+ 206 0020 002B     		cmp	r3, #0
+ 207 0022 45DC     		bgt	.L8
+ 208              	.LBB7:
+  38:Src/semaphore.c **** 
+  39:Src/semaphore.c **** 		uintX_t taskPrior = sem->waitList;
+ 209              		.loc 1 39 0
+ 210 0024 7B68     		ldr	r3, [r7, #4]
+ 211 0026 D3E90234 		ldrd	r3, [r3, #8]
+ 212 002a C7E90634 		strd	r3, [r7, #24]
+  40:Src/semaphore.c **** 		uintX_t p = log2(taskPrior);
+ 213              		.loc 1 40 0
+ 214 002e D7E90601 		ldrd	r0, [r7, #24]
+ 215 0032 FFF7FEFF 		bl	__aeabi_ul2d
+ 216              	.LVL0:
+ 217 0036 0346     		mov	r3, r0
+ 218 0038 0C46     		mov	r4, r1
+ 219 003a 44EC103B 		vmov	d0, r3, r4
+ 220 003e FFF7FEFF 		bl	log
+ 221 0042 51EC100B 		vmov	r0, r1, d0
+ 222 0046 1EA3     		adr	r3, .L10
+ 223 0048 D3E90023 		ldrd	r2, [r3]
+ 224 004c FFF7FEFF 		bl	__aeabi_ddiv
+ 225              	.LVL1:
+ 226 0050 0346     		mov	r3, r0
+ 227 0052 0C46     		mov	r4, r1
+ 228 0054 1846     		mov	r0, r3
+ 229 0056 2146     		mov	r1, r4
+ 230 0058 FFF7FEFF 		bl	__aeabi_d2ulz
+ 231              	.LVL2:
+ 232 005c 0346     		mov	r3, r0
+ 233 005e 0C46     		mov	r4, r1
+ 234 0060 C7E90434 		strd	r3, [r7, #16]
+  41:Src/semaphore.c **** 		uintX_t iteratorPrior =  ITERATORPRIOR;
+ 235              		.loc 1 41 0
+ 236 0064 4FF00003 		mov	r3, #0
+ 237 0068 4FF00044 		mov	r4, #-2147483648
+ 238 006c C7E90234 		strd	r3, [r7, #8]
+  42:Src/semaphore.c **** 		sem->waitList &= ~iteratorPrior;
+ 239              		.loc 1 42 0
+ 240 0070 7B68     		ldr	r3, [r7, #4]
+ 241 0072 D3E90212 		ldrd	r1, [r3, #8]
+ 242 0076 D7E90234 		ldrd	r3, [r7, #8]
+ 243 007a 6FEA0303 		mvn	r3, r3
+ 244 007e 6FEA0404 		mvn	r4, r4
+ 245 0082 03EA0103 		and	r3, r3, r1
+ 246 0086 04EA0204 		and	r4, r4, r2
+ 247 008a 7A68     		ldr	r2, [r7, #4]
+ 248 008c C2E90234 		strd	r3, [r2, #8]
+ARM GAS  /tmp/ccgsBq9g.s 			page 6
+
+
+ 249              	.LBB8:
+ 250              	.LBB9:
+ 251              		.file 2 "Drivers/CMSIS/Include/cmsis_gcc.h"
+   1:Drivers/CMSIS/Include/cmsis_gcc.h **** /**************************************************************************//**
+   2:Drivers/CMSIS/Include/cmsis_gcc.h ****  * @file     cmsis_gcc.h
+   3:Drivers/CMSIS/Include/cmsis_gcc.h ****  * @brief    CMSIS Cortex-M Core Function/Instruction Header File
+   4:Drivers/CMSIS/Include/cmsis_gcc.h ****  * @version  V4.30
+   5:Drivers/CMSIS/Include/cmsis_gcc.h ****  * @date     20. October 2015
+   6:Drivers/CMSIS/Include/cmsis_gcc.h ****  ******************************************************************************/
+   7:Drivers/CMSIS/Include/cmsis_gcc.h **** /* Copyright (c) 2009 - 2015 ARM LIMITED
+   8:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+   9:Drivers/CMSIS/Include/cmsis_gcc.h ****    All rights reserved.
+  10:Drivers/CMSIS/Include/cmsis_gcc.h ****    Redistribution and use in source and binary forms, with or without
+  11:Drivers/CMSIS/Include/cmsis_gcc.h ****    modification, are permitted provided that the following conditions are met:
+  12:Drivers/CMSIS/Include/cmsis_gcc.h ****    - Redistributions of source code must retain the above copyright
+  13:Drivers/CMSIS/Include/cmsis_gcc.h ****      notice, this list of conditions and the following disclaimer.
+  14:Drivers/CMSIS/Include/cmsis_gcc.h ****    - Redistributions in binary form must reproduce the above copyright
+  15:Drivers/CMSIS/Include/cmsis_gcc.h ****      notice, this list of conditions and the following disclaimer in the
+  16:Drivers/CMSIS/Include/cmsis_gcc.h ****      documentation and/or other materials provided with the distribution.
+  17:Drivers/CMSIS/Include/cmsis_gcc.h ****    - Neither the name of ARM nor the names of its contributors may be used
+  18:Drivers/CMSIS/Include/cmsis_gcc.h ****      to endorse or promote products derived from this software without
+  19:Drivers/CMSIS/Include/cmsis_gcc.h ****      specific prior written permission.
+  20:Drivers/CMSIS/Include/cmsis_gcc.h ****    *
+  21:Drivers/CMSIS/Include/cmsis_gcc.h ****    THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
+  22:Drivers/CMSIS/Include/cmsis_gcc.h ****    AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
+  23:Drivers/CMSIS/Include/cmsis_gcc.h ****    IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
+  24:Drivers/CMSIS/Include/cmsis_gcc.h ****    ARE DISCLAIMED. IN NO EVENT SHALL COPYRIGHT HOLDERS AND CONTRIBUTORS BE
+  25:Drivers/CMSIS/Include/cmsis_gcc.h ****    LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
+  26:Drivers/CMSIS/Include/cmsis_gcc.h ****    CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF
+  27:Drivers/CMSIS/Include/cmsis_gcc.h ****    SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS
+  28:Drivers/CMSIS/Include/cmsis_gcc.h ****    INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY OF LIABILITY, WHETHER IN
+  29:Drivers/CMSIS/Include/cmsis_gcc.h ****    CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE)
+  30:Drivers/CMSIS/Include/cmsis_gcc.h ****    ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE
+  31:Drivers/CMSIS/Include/cmsis_gcc.h ****    POSSIBILITY OF SUCH DAMAGE.
+  32:Drivers/CMSIS/Include/cmsis_gcc.h ****    ---------------------------------------------------------------------------*/
+  33:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  34:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  35:Drivers/CMSIS/Include/cmsis_gcc.h **** #ifndef __CMSIS_GCC_H
+  36:Drivers/CMSIS/Include/cmsis_gcc.h **** #define __CMSIS_GCC_H
+  37:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  38:Drivers/CMSIS/Include/cmsis_gcc.h **** /* ignore some GCC warnings */
+  39:Drivers/CMSIS/Include/cmsis_gcc.h **** #if defined ( __GNUC__ )
+  40:Drivers/CMSIS/Include/cmsis_gcc.h **** #pragma GCC diagnostic push
+  41:Drivers/CMSIS/Include/cmsis_gcc.h **** #pragma GCC diagnostic ignored "-Wsign-conversion"
+  42:Drivers/CMSIS/Include/cmsis_gcc.h **** #pragma GCC diagnostic ignored "-Wconversion"
+  43:Drivers/CMSIS/Include/cmsis_gcc.h **** #pragma GCC diagnostic ignored "-Wunused-parameter"
+  44:Drivers/CMSIS/Include/cmsis_gcc.h **** #endif
+  45:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  46:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  47:Drivers/CMSIS/Include/cmsis_gcc.h **** /* ###########################  Core Function Access  ########################### */
+  48:Drivers/CMSIS/Include/cmsis_gcc.h **** /** \ingroup  CMSIS_Core_FunctionInterface
+  49:Drivers/CMSIS/Include/cmsis_gcc.h ****     \defgroup CMSIS_Core_RegAccFunctions CMSIS Core Register Access Functions
+  50:Drivers/CMSIS/Include/cmsis_gcc.h ****   @{
+  51:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
+  52:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  53:Drivers/CMSIS/Include/cmsis_gcc.h **** /**
+  54:Drivers/CMSIS/Include/cmsis_gcc.h ****   \brief   Enable IRQ Interrupts
+ARM GAS  /tmp/ccgsBq9g.s 			page 7
+
+
+  55:Drivers/CMSIS/Include/cmsis_gcc.h ****   \details Enables IRQ interrupts by clearing the I-bit in the CPSR.
+  56:Drivers/CMSIS/Include/cmsis_gcc.h ****            Can only be executed in Privileged modes.
+  57:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
+  58:Drivers/CMSIS/Include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __enable_irq(void)
+  59:Drivers/CMSIS/Include/cmsis_gcc.h **** {
+  60:Drivers/CMSIS/Include/cmsis_gcc.h ****   __ASM volatile ("cpsie i" : : : "memory");
+  61:Drivers/CMSIS/Include/cmsis_gcc.h **** }
+  62:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  63:Drivers/CMSIS/Include/cmsis_gcc.h **** 
+  64:Drivers/CMSIS/Include/cmsis_gcc.h **** /**
+  65:Drivers/CMSIS/Include/cmsis_gcc.h ****   \brief   Disable IRQ Interrupts
+  66:Drivers/CMSIS/Include/cmsis_gcc.h ****   \details Disables IRQ interrupts by setting the I-bit in the CPSR.
+  67:Drivers/CMSIS/Include/cmsis_gcc.h ****   Can only be executed in Privileged modes.
+  68:Drivers/CMSIS/Include/cmsis_gcc.h ****  */
+  69:Drivers/CMSIS/Include/cmsis_gcc.h **** __attribute__( ( always_inline ) ) __STATIC_INLINE void __disable_irq(void)
+  70:Drivers/CMSIS/Include/cmsis_gcc.h **** {
+  71:Drivers/CMSIS/Include/cmsis_gcc.h ****   __ASM volatile ("cpsid i" : : : "memory");
+ 252              		.loc 2 71 0
+ 253              		.syntax unified
+ 254              	@ 71 "Drivers/CMSIS/Include/cmsis_gcc.h" 1
+ 255 0090 72B6     		cpsid i
+ 256              	@ 0 "" 2
+ 257              		.thumb
+ 258              		.syntax unified
+ 259              	.LBE9:
+ 260              	.LBE8:
+  43:Src/semaphore.c **** 
+  44:Src/semaphore.c **** 			SST_INT_LOCK();
+  45:Src/semaphore.c **** 			SST_post(p,SST_SIGNAL_TASKINIT,0);
+ 261              		.loc 1 45 0
+ 262 0092 4FF00003 		mov	r3, #0
+ 263 0096 4FF00004 		mov	r4, #0
+ 264 009a CDE90034 		strd	r3, [sp]
+ 265 009e 4FF00002 		mov	r2, #0
+ 266 00a2 4FF00003 		mov	r3, #0
+ 267 00a6 D7E90401 		ldrd	r0, [r7, #16]
+ 268 00aa FFF7FEFF 		bl	SST_post
+ 269              	.LBB10:
+ 270              	.LBB11:
+  60:Drivers/CMSIS/Include/cmsis_gcc.h **** }
+ 271              		.loc 2 60 0
+ 272              		.syntax unified
+ 273              	@ 60 "Drivers/CMSIS/Include/cmsis_gcc.h" 1
+ 274 00ae 62B6     		cpsie i
+ 275              	@ 0 "" 2
+ 276              		.thumb
+ 277              		.syntax unified
+ 278              	.L8:
+ 279              	.LBE11:
+ 280              	.LBE10:
+ 281              	.LBE7:
+  46:Src/semaphore.c **** 			SST_INT_UNLOCK();
+  47:Src/semaphore.c **** 	}
+  48:Src/semaphore.c **** 
+  49:Src/semaphore.c **** 	return OK;
+ 282              		.loc 1 49 0
+ 283 00b0 0223     		movs	r3, #2
+ARM GAS  /tmp/ccgsBq9g.s 			page 8
+
+
+  50:Src/semaphore.c **** 
+  51:Src/semaphore.c **** }
+ 284              		.loc 1 51 0
+ 285 00b2 1846     		mov	r0, r3
+ 286 00b4 2437     		adds	r7, r7, #36
+ 287              	.LCFI15:
+ 288              		.cfi_def_cfa_offset 12
+ 289 00b6 BD46     		mov	sp, r7
+ 290              	.LCFI16:
+ 291              		.cfi_def_cfa_register 13
+ 292              		@ sp needed
+ 293 00b8 90BD     		pop	{r4, r7, pc}
+ 294              	.L11:
+ 295 00ba 00BFAFF3 		.align	3
+ 295      0080
+ 296              	.L10:
+ 297 00c0 EF39FAFE 		.word	4277811695
+ 298 00c4 422EE63F 		.word	1072049730
+ 299              		.cfi_endproc
+ 300              	.LFE126:
+ 302              		.text
+ 303              	.Letext0:
+ 304              		.file 3 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 305              		.file 4 "/usr/arm-none-eabi/include/sys/lock.h"
+ 306              		.file 5 "/usr/arm-none-eabi/include/sys/_types.h"
+ 307              		.file 6 "/usr/lib/gcc/arm-none-eabi/6.2.0/include/stddef.h"
+ 308              		.file 7 "/usr/arm-none-eabi/include/sys/reent.h"
+ 309              		.file 8 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 310              		.file 9 "Inc/uintx.h"
+ 311              		.file 10 "Inc/semaphore.h"
+ 312              		.file 11 "Drivers/CMSIS/Include/core_cm4.h"
+ 313              		.file 12 "Drivers/CMSIS/Device/ST/STM32L4xx/Include/system_stm32l4xx.h"
+ 314              		.file 13 "Inc/mailbox.h"
+ 315              		.file 14 "Inc/sst.h"
+ARM GAS  /tmp/ccgsBq9g.s 			page 9
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 semaphore.c
+     /tmp/ccgsBq9g.s:18     .text.ConstructSemaphore:0000000000000000 $t
+     /tmp/ccgsBq9g.s:25     .text.ConstructSemaphore:0000000000000000 ConstructSemaphore
+     /tmp/ccgsBq9g.s:82     .text.do_sem_down:0000000000000000 $t
+     /tmp/ccgsBq9g.s:89     .text.do_sem_down:0000000000000000 do_sem_down
+     /tmp/ccgsBq9g.s:168    .text.do_sem_up:0000000000000000 $t
+     /tmp/ccgsBq9g.s:175    .text.do_sem_up:0000000000000000 do_sem_up
+     /tmp/ccgsBq9g.s:297    .text.do_sem_up:00000000000000c0 $d
+                     .debug_frame:0000000000000010 $d
+
+UNDEFINED SYMBOLS
+__aeabi_ul2d
+__aeabi_ddiv
+__aeabi_d2ulz
+log
+SST_post

@@ -1,0 +1,490 @@
+ARM GAS  /tmp/ccQfVSYD.s 			page 1
+
+
+   1              		.cpu cortex-m4
+   2              		.eabi_attribute 27, 1
+   3              		.eabi_attribute 28, 1
+   4              		.eabi_attribute 20, 1
+   5              		.eabi_attribute 21, 1
+   6              		.eabi_attribute 23, 3
+   7              		.eabi_attribute 24, 1
+   8              		.eabi_attribute 25, 1
+   9              		.eabi_attribute 26, 1
+  10              		.eabi_attribute 30, 6
+  11              		.eabi_attribute 34, 1
+  12              		.eabi_attribute 18, 4
+  13              		.file	"queue.c"
+  14              		.text
+  15              	.Ltext0:
+  16              		.cfi_sections	.debug_frame
+  17              		.section	.text.ConstructQueue,"ax",%progbits
+  18              		.align	1
+  19              		.global	ConstructQueue
+  20              		.syntax unified
+  21              		.thumb
+  22              		.thumb_func
+  23              		.fpu fpv4-sp-d16
+  25              	ConstructQueue:
+  26              	.LFB0:
+  27              		.file 1 "Src/queue.c"
+   1:Src/queue.c   **** #include <stdlib.h>
+   2:Src/queue.c   **** #include "queue.h"
+   3:Src/queue.c   **** #include "stddef.h"
+   4:Src/queue.c   **** 
+   5:Src/queue.c   **** Queue ConstructQueue(int l, int semaphoreSize){
+  28              		.loc 1 5 0
+  29              		.cfi_startproc
+  30              		@ args = 0, pretend = 0, frame = 64
+  31              		@ frame_needed = 1, uses_anonymous_args = 0
+  32 0000 B0B5     		push	{r4, r5, r7, lr}
+  33              	.LCFI0:
+  34              		.cfi_def_cfa_offset 16
+  35              		.cfi_offset 4, -16
+  36              		.cfi_offset 5, -12
+  37              		.cfi_offset 7, -8
+  38              		.cfi_offset 14, -4
+  39 0002 90B0     		sub	sp, sp, #64
+  40              	.LCFI1:
+  41              		.cfi_def_cfa_offset 80
+  42 0004 00AF     		add	r7, sp, #0
+  43              	.LCFI2:
+  44              		.cfi_def_cfa_register 7
+  45 0006 F860     		str	r0, [r7, #12]
+  46 0008 B960     		str	r1, [r7, #8]
+  47 000a 7A60     		str	r2, [r7, #4]
+   6:Src/queue.c   **** 	Queue q = {.limit = l, .size = 0, .s ={.counter = semaphoreSize}, .head = &(NODE){}, .tail = &(NOD
+  48              		.loc 1 6 0
+  49 000c 07F11003 		add	r3, r7, #16
+  50 0010 2022     		movs	r2, #32
+  51 0012 0021     		movs	r1, #0
+  52 0014 1846     		mov	r0, r3
+ARM GAS  /tmp/ccQfVSYD.s 			page 2
+
+
+  53 0016 FFF7FEFF 		bl	memset
+  54 001a 7B68     		ldr	r3, [r7, #4]
+  55 001c 5BB2     		sxtb	r3, r3
+  56 001e 3B74     		strb	r3, [r7, #16]
+  57 0020 07F13003 		add	r3, r7, #48
+  58 0024 0022     		movs	r2, #0
+  59 0026 1A60     		str	r2, [r3]
+  60 0028 5A60     		str	r2, [r3, #4]
+  61 002a 07F13003 		add	r3, r7, #48
+  62 002e 3B62     		str	r3, [r7, #32]
+  63 0030 07F13803 		add	r3, r7, #56
+  64 0034 0022     		movs	r2, #0
+  65 0036 1A60     		str	r2, [r3]
+  66 0038 5A60     		str	r2, [r3, #4]
+  67 003a 07F13803 		add	r3, r7, #56
+  68 003e 7B62     		str	r3, [r7, #36]
+  69 0040 BB68     		ldr	r3, [r7, #8]
+  70 0042 FB62     		str	r3, [r7, #44]
+   7:Src/queue.c   **** 	return q;
+  71              		.loc 1 7 0
+  72 0044 FB68     		ldr	r3, [r7, #12]
+  73 0046 1D46     		mov	r5, r3
+  74 0048 07F11004 		add	r4, r7, #16
+  75 004c 0FCC     		ldmia	r4!, {r0, r1, r2, r3}
+  76 004e 0FC5     		stmia	r5!, {r0, r1, r2, r3}
+  77 0050 94E80F00 		ldm	r4, {r0, r1, r2, r3}
+  78 0054 85E80F00 		stm	r5, {r0, r1, r2, r3}
+   8:Src/queue.c   **** }
+  79              		.loc 1 8 0
+  80 0058 F868     		ldr	r0, [r7, #12]
+  81 005a 4037     		adds	r7, r7, #64
+  82              	.LCFI3:
+  83              		.cfi_def_cfa_offset 16
+  84 005c BD46     		mov	sp, r7
+  85              	.LCFI4:
+  86              		.cfi_def_cfa_register 13
+  87              		@ sp needed
+  88 005e B0BD     		pop	{r4, r5, r7, pc}
+  89              		.cfi_endproc
+  90              	.LFE0:
+  92              		.section	.text.DestructQueue,"ax",%progbits
+  93              		.align	1
+  94              		.global	DestructQueue
+  95              		.syntax unified
+  96              		.thumb
+  97              		.thumb_func
+  98              		.fpu fpv4-sp-d16
+ 100              	DestructQueue:
+ 101              	.LFB1:
+   9:Src/queue.c   **** 
+  10:Src/queue.c   **** void DestructQueue (Queue * q){
+ 102              		.loc 1 10 0
+ 103              		.cfi_startproc
+ 104              		@ args = 0, pretend = 0, frame = 16
+ 105              		@ frame_needed = 1, uses_anonymous_args = 0
+ 106 0000 80B5     		push	{r7, lr}
+ 107              	.LCFI5:
+ARM GAS  /tmp/ccQfVSYD.s 			page 3
+
+
+ 108              		.cfi_def_cfa_offset 8
+ 109              		.cfi_offset 7, -8
+ 110              		.cfi_offset 14, -4
+ 111 0002 84B0     		sub	sp, sp, #16
+ 112              	.LCFI6:
+ 113              		.cfi_def_cfa_offset 24
+ 114 0004 00AF     		add	r7, sp, #0
+ 115              	.LCFI7:
+ 116              		.cfi_def_cfa_register 7
+ 117 0006 7860     		str	r0, [r7, #4]
+  11:Src/queue.c   **** 	NODE *pN;
+  12:Src/queue.c   **** 	while (!isEmptyQ (q)){
+ 118              		.loc 1 12 0
+ 119 0008 06E0     		b	.L4
+ 120              	.L5:
+  13:Src/queue.c   **** 		pN = Dequeue(q);
+ 121              		.loc 1 13 0
+ 122 000a 7868     		ldr	r0, [r7, #4]
+ 123 000c FFF7FEFF 		bl	Dequeue
+ 124 0010 F860     		str	r0, [r7, #12]
+  14:Src/queue.c   **** 		free(pN);
+ 125              		.loc 1 14 0
+ 126 0012 F868     		ldr	r0, [r7, #12]
+ 127 0014 FFF7FEFF 		bl	free
+ 128              	.L4:
+  12:Src/queue.c   **** 		pN = Dequeue(q);
+ 129              		.loc 1 12 0
+ 130 0018 7868     		ldr	r0, [r7, #4]
+ 131 001a FFF7FEFF 		bl	isEmptyQ
+ 132 001e 0346     		mov	r3, r0
+ 133 0020 002B     		cmp	r3, #0
+ 134 0022 F2D0     		beq	.L5
+  15:Src/queue.c   **** 
+  16:Src/queue.c   **** 	}
+  17:Src/queue.c   **** 	free(q);
+ 135              		.loc 1 17 0
+ 136 0024 7868     		ldr	r0, [r7, #4]
+ 137 0026 FFF7FEFF 		bl	free
+  18:Src/queue.c   **** }
+ 138              		.loc 1 18 0
+ 139 002a 00BF     		nop
+ 140 002c 1037     		adds	r7, r7, #16
+ 141              	.LCFI8:
+ 142              		.cfi_def_cfa_offset 8
+ 143 002e BD46     		mov	sp, r7
+ 144              	.LCFI9:
+ 145              		.cfi_def_cfa_register 13
+ 146              		@ sp needed
+ 147 0030 80BD     		pop	{r7, pc}
+ 148              		.cfi_endproc
+ 149              	.LFE1:
+ 151              		.section	.text.Enqueue,"ax",%progbits
+ 152              		.align	1
+ 153              		.global	Enqueue
+ 154              		.syntax unified
+ 155              		.thumb
+ 156              		.thumb_func
+ARM GAS  /tmp/ccQfVSYD.s 			page 4
+
+
+ 157              		.fpu fpv4-sp-d16
+ 159              	Enqueue:
+ 160              	.LFB2:
+  19:Src/queue.c   **** 
+  20:Src/queue.c   **** int Enqueue (Queue *pQueue, NODE *item) {
+ 161              		.loc 1 20 0
+ 162              		.cfi_startproc
+ 163              		@ args = 0, pretend = 0, frame = 8
+ 164              		@ frame_needed = 1, uses_anonymous_args = 0
+ 165              		@ link register save eliminated.
+ 166 0000 80B4     		push	{r7}
+ 167              	.LCFI10:
+ 168              		.cfi_def_cfa_offset 4
+ 169              		.cfi_offset 7, -4
+ 170 0002 83B0     		sub	sp, sp, #12
+ 171              	.LCFI11:
+ 172              		.cfi_def_cfa_offset 16
+ 173 0004 00AF     		add	r7, sp, #0
+ 174              	.LCFI12:
+ 175              		.cfi_def_cfa_register 7
+ 176 0006 7860     		str	r0, [r7, #4]
+ 177 0008 3960     		str	r1, [r7]
+  21:Src/queue.c   **** 
+  22:Src/queue.c   **** 	if( (pQueue == NULL) || (item == NULL) )
+ 178              		.loc 1 22 0
+ 179 000a 7B68     		ldr	r3, [r7, #4]
+ 180 000c 002B     		cmp	r3, #0
+ 181 000e 02D0     		beq	.L7
+ 182              		.loc 1 22 0 is_stmt 0 discriminator 1
+ 183 0010 3B68     		ldr	r3, [r7]
+ 184 0012 002B     		cmp	r3, #0
+ 185 0014 01D1     		bne	.L8
+ 186              	.L7:
+  23:Src/queue.c   **** 		return FALSE;
+ 187              		.loc 1 23 0 is_stmt 1
+ 188 0016 0023     		movs	r3, #0
+ 189 0018 1FE0     		b	.L9
+ 190              	.L8:
+  24:Src/queue.c   **** 	
+  25:Src/queue.c   **** 	if( pQueue->size == pQueue->limit)
+ 191              		.loc 1 25 0
+ 192 001a 7B68     		ldr	r3, [r7, #4]
+ 193 001c 9A69     		ldr	r2, [r3, #24]
+ 194 001e 7B68     		ldr	r3, [r7, #4]
+ 195 0020 DB69     		ldr	r3, [r3, #28]
+ 196 0022 9A42     		cmp	r2, r3
+ 197 0024 01D1     		bne	.L10
+  26:Src/queue.c   **** 		return FALSE;
+ 198              		.loc 1 26 0
+ 199 0026 0023     		movs	r3, #0
+ 200 0028 17E0     		b	.L9
+ 201              	.L10:
+  27:Src/queue.c   **** 
+  28:Src/queue.c   **** 	if ( pQueue->size == 0 ){
+ 202              		.loc 1 28 0
+ 203 002a 7B68     		ldr	r3, [r7, #4]
+ 204 002c 9B69     		ldr	r3, [r3, #24]
+ARM GAS  /tmp/ccQfVSYD.s 			page 5
+
+
+ 205 002e 002B     		cmp	r3, #0
+ 206 0030 06D1     		bne	.L11
+  29:Src/queue.c   **** 		pQueue->head = item;
+ 207              		.loc 1 29 0
+ 208 0032 7B68     		ldr	r3, [r7, #4]
+ 209 0034 3A68     		ldr	r2, [r7]
+ 210 0036 1A61     		str	r2, [r3, #16]
+  30:Src/queue.c   **** 		pQueue->tail = item;
+ 211              		.loc 1 30 0
+ 212 0038 7B68     		ldr	r3, [r7, #4]
+ 213 003a 3A68     		ldr	r2, [r7]
+ 214 003c 5A61     		str	r2, [r3, #20]
+ 215 003e 06E0     		b	.L12
+ 216              	.L11:
+  31:Src/queue.c   **** 
+  32:Src/queue.c   **** 	}else {
+  33:Src/queue.c   **** 		//pQueue->head->prev = pQueue->tail;
+  34:Src/queue.c   **** 		pQueue->tail->prev = item;
+ 217              		.loc 1 34 0
+ 218 0040 7B68     		ldr	r3, [r7, #4]
+ 219 0042 5B69     		ldr	r3, [r3, #20]
+ 220 0044 3A68     		ldr	r2, [r7]
+ 221 0046 5A60     		str	r2, [r3, #4]
+  35:Src/queue.c   **** 		pQueue->tail = item;
+ 222              		.loc 1 35 0
+ 223 0048 7B68     		ldr	r3, [r7, #4]
+ 224 004a 3A68     		ldr	r2, [r7]
+ 225 004c 5A61     		str	r2, [r3, #20]
+ 226              	.L12:
+  36:Src/queue.c   **** 
+  37:Src/queue.c   **** 	}
+  38:Src/queue.c   **** 	pQueue->size++;
+ 227              		.loc 1 38 0
+ 228 004e 7B68     		ldr	r3, [r7, #4]
+ 229 0050 9B69     		ldr	r3, [r3, #24]
+ 230 0052 5A1C     		adds	r2, r3, #1
+ 231 0054 7B68     		ldr	r3, [r7, #4]
+ 232 0056 9A61     		str	r2, [r3, #24]
+  39:Src/queue.c   **** 	return TRUE;
+ 233              		.loc 1 39 0
+ 234 0058 0123     		movs	r3, #1
+ 235              	.L9:
+  40:Src/queue.c   **** }
+ 236              		.loc 1 40 0
+ 237 005a 1846     		mov	r0, r3
+ 238 005c 0C37     		adds	r7, r7, #12
+ 239              	.LCFI13:
+ 240              		.cfi_def_cfa_offset 4
+ 241 005e BD46     		mov	sp, r7
+ 242              	.LCFI14:
+ 243              		.cfi_def_cfa_register 13
+ 244              		@ sp needed
+ 245 0060 5DF8047B 		ldr	r7, [sp], #4
+ 246              	.LCFI15:
+ 247              		.cfi_restore 7
+ 248              		.cfi_def_cfa_offset 0
+ 249 0064 7047     		bx	lr
+ARM GAS  /tmp/ccQfVSYD.s 			page 6
+
+
+ 250              		.cfi_endproc
+ 251              	.LFE2:
+ 253              		.section	.text.Dequeue,"ax",%progbits
+ 254              		.align	1
+ 255              		.global	Dequeue
+ 256              		.syntax unified
+ 257              		.thumb
+ 258              		.thumb_func
+ 259              		.fpu fpv4-sp-d16
+ 261              	Dequeue:
+ 262              	.LFB3:
+  41:Src/queue.c   **** 
+  42:Src/queue.c   **** NODE *Dequeue (Queue *pQueue){
+ 263              		.loc 1 42 0
+ 264              		.cfi_startproc
+ 265              		@ args = 0, pretend = 0, frame = 16
+ 266              		@ frame_needed = 1, uses_anonymous_args = 0
+ 267 0000 80B5     		push	{r7, lr}
+ 268              	.LCFI16:
+ 269              		.cfi_def_cfa_offset 8
+ 270              		.cfi_offset 7, -8
+ 271              		.cfi_offset 14, -4
+ 272 0002 84B0     		sub	sp, sp, #16
+ 273              	.LCFI17:
+ 274              		.cfi_def_cfa_offset 24
+ 275 0004 00AF     		add	r7, sp, #0
+ 276              	.LCFI18:
+ 277              		.cfi_def_cfa_register 7
+ 278 0006 7860     		str	r0, [r7, #4]
+  43:Src/queue.c   **** 	if (isEmptyQ(pQueue))
+ 279              		.loc 1 43 0
+ 280 0008 7868     		ldr	r0, [r7, #4]
+ 281 000a FFF7FEFF 		bl	isEmptyQ
+ 282 000e 0346     		mov	r3, r0
+ 283 0010 002B     		cmp	r3, #0
+ 284 0012 01D0     		beq	.L14
+  44:Src/queue.c   **** 		return NULL;
+ 285              		.loc 1 44 0
+ 286 0014 0023     		movs	r3, #0
+ 287 0016 0DE0     		b	.L15
+ 288              	.L14:
+  45:Src/queue.c   **** 	NODE *item = pQueue->head;
+ 289              		.loc 1 45 0
+ 290 0018 7B68     		ldr	r3, [r7, #4]
+ 291 001a 1B69     		ldr	r3, [r3, #16]
+ 292 001c FB60     		str	r3, [r7, #12]
+  46:Src/queue.c   **** 	pQueue->head = pQueue->head->prev;
+ 293              		.loc 1 46 0
+ 294 001e 7B68     		ldr	r3, [r7, #4]
+ 295 0020 1B69     		ldr	r3, [r3, #16]
+ 296 0022 5A68     		ldr	r2, [r3, #4]
+ 297 0024 7B68     		ldr	r3, [r7, #4]
+ 298 0026 1A61     		str	r2, [r3, #16]
+  47:Src/queue.c   **** 	pQueue->size--;
+ 299              		.loc 1 47 0
+ 300 0028 7B68     		ldr	r3, [r7, #4]
+ 301 002a 9B69     		ldr	r3, [r3, #24]
+ARM GAS  /tmp/ccQfVSYD.s 			page 7
+
+
+ 302 002c 5A1E     		subs	r2, r3, #1
+ 303 002e 7B68     		ldr	r3, [r7, #4]
+ 304 0030 9A61     		str	r2, [r3, #24]
+  48:Src/queue.c   **** 	return item;
+ 305              		.loc 1 48 0
+ 306 0032 FB68     		ldr	r3, [r7, #12]
+ 307              	.L15:
+  49:Src/queue.c   **** }
+ 308              		.loc 1 49 0
+ 309 0034 1846     		mov	r0, r3
+ 310 0036 1037     		adds	r7, r7, #16
+ 311              	.LCFI19:
+ 312              		.cfi_def_cfa_offset 8
+ 313 0038 BD46     		mov	sp, r7
+ 314              	.LCFI20:
+ 315              		.cfi_def_cfa_register 13
+ 316              		@ sp needed
+ 317 003a 80BD     		pop	{r7, pc}
+ 318              		.cfi_endproc
+ 319              	.LFE3:
+ 321              		.section	.text.isEmptyQ,"ax",%progbits
+ 322              		.align	1
+ 323              		.global	isEmptyQ
+ 324              		.syntax unified
+ 325              		.thumb
+ 326              		.thumb_func
+ 327              		.fpu fpv4-sp-d16
+ 329              	isEmptyQ:
+ 330              	.LFB4:
+  50:Src/queue.c   **** 
+  51:Src/queue.c   **** int isEmptyQ (Queue *pQueue){
+ 331              		.loc 1 51 0
+ 332              		.cfi_startproc
+ 333              		@ args = 0, pretend = 0, frame = 8
+ 334              		@ frame_needed = 1, uses_anonymous_args = 0
+ 335              		@ link register save eliminated.
+ 336 0000 80B4     		push	{r7}
+ 337              	.LCFI21:
+ 338              		.cfi_def_cfa_offset 4
+ 339              		.cfi_offset 7, -4
+ 340 0002 83B0     		sub	sp, sp, #12
+ 341              	.LCFI22:
+ 342              		.cfi_def_cfa_offset 16
+ 343 0004 00AF     		add	r7, sp, #0
+ 344              	.LCFI23:
+ 345              		.cfi_def_cfa_register 7
+ 346 0006 7860     		str	r0, [r7, #4]
+  52:Src/queue.c   **** 	if(pQueue == NULL){
+ 347              		.loc 1 52 0
+ 348 0008 7B68     		ldr	r3, [r7, #4]
+ 349 000a 002B     		cmp	r3, #0
+ 350 000c 01D1     		bne	.L17
+  53:Src/queue.c   **** 		return FALSE;
+ 351              		.loc 1 53 0
+ 352 000e 0023     		movs	r3, #0
+ 353 0010 06E0     		b	.L18
+ 354              	.L17:
+ARM GAS  /tmp/ccQfVSYD.s 			page 8
+
+
+  54:Src/queue.c   **** 	}
+  55:Src/queue.c   **** 	if(pQueue->size == 0){
+ 355              		.loc 1 55 0
+ 356 0012 7B68     		ldr	r3, [r7, #4]
+ 357 0014 9B69     		ldr	r3, [r3, #24]
+ 358 0016 002B     		cmp	r3, #0
+ 359 0018 01D1     		bne	.L19
+  56:Src/queue.c   **** 		return TRUE;
+ 360              		.loc 1 56 0
+ 361 001a 0123     		movs	r3, #1
+ 362 001c 00E0     		b	.L18
+ 363              	.L19:
+  57:Src/queue.c   **** 	} else {
+  58:Src/queue.c   **** 		return FALSE;
+ 364              		.loc 1 58 0
+ 365 001e 0023     		movs	r3, #0
+ 366              	.L18:
+  59:Src/queue.c   **** 	}
+  60:Src/queue.c   **** 
+  61:Src/queue.c   **** }...
+ 367              		.loc 1 61 0
+ 368 0020 1846     		mov	r0, r3
+ 369 0022 0C37     		adds	r7, r7, #12
+ 370              	.LCFI24:
+ 371              		.cfi_def_cfa_offset 4
+ 372 0024 BD46     		mov	sp, r7
+ 373              	.LCFI25:
+ 374              		.cfi_def_cfa_register 13
+ 375              		@ sp needed
+ 376 0026 5DF8047B 		ldr	r7, [sp], #4
+ 377              	.LCFI26:
+ 378              		.cfi_restore 7
+ 379              		.cfi_def_cfa_offset 0
+ 380 002a 7047     		bx	lr
+ 381              		.cfi_endproc
+ 382              	.LFE4:
+ 384              		.text
+ 385              	.Letext0:
+ 386              		.file 2 "/usr/arm-none-eabi/include/machine/_default_types.h"
+ 387              		.file 3 "/usr/arm-none-eabi/include/sys/lock.h"
+ 388              		.file 4 "/usr/arm-none-eabi/include/sys/_types.h"
+ 389              		.file 5 "/usr/lib/gcc/arm-none-eabi/6.2.0/include/stddef.h"
+ 390              		.file 6 "/usr/arm-none-eabi/include/sys/reent.h"
+ 391              		.file 7 "/usr/arm-none-eabi/include/sys/_stdint.h"
+ 392              		.file 8 "Inc/uintx.h"
+ 393              		.file 9 "Inc/semaphore.h"
+ 394              		.file 10 "Inc/queue.h"
+ARM GAS  /tmp/ccQfVSYD.s 			page 9
+
+
+DEFINED SYMBOLS
+                            *ABS*:0000000000000000 queue.c
+     /tmp/ccQfVSYD.s:18     .text.ConstructQueue:0000000000000000 $t
+     /tmp/ccQfVSYD.s:25     .text.ConstructQueue:0000000000000000 ConstructQueue
+     /tmp/ccQfVSYD.s:93     .text.DestructQueue:0000000000000000 $t
+     /tmp/ccQfVSYD.s:100    .text.DestructQueue:0000000000000000 DestructQueue
+     /tmp/ccQfVSYD.s:261    .text.Dequeue:0000000000000000 Dequeue
+     /tmp/ccQfVSYD.s:329    .text.isEmptyQ:0000000000000000 isEmptyQ
+     /tmp/ccQfVSYD.s:152    .text.Enqueue:0000000000000000 $t
+     /tmp/ccQfVSYD.s:159    .text.Enqueue:0000000000000000 Enqueue
+     /tmp/ccQfVSYD.s:254    .text.Dequeue:0000000000000000 $t
+     /tmp/ccQfVSYD.s:322    .text.isEmptyQ:0000000000000000 $t
+                     .debug_frame:0000000000000010 $d
+
+UNDEFINED SYMBOLS
+memset
+free
